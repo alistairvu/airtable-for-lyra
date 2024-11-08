@@ -1,10 +1,8 @@
-import { auth, signOut } from "~/server/auth";
+import { signOut } from "~/server/auth";
 import { SidebarTrigger } from "../ui/sidebar";
 import { Button } from "../ui/button";
 
 export const DashboardHeader = async () => {
-  const session = await auth();
-
   return (
     <div className="flex items-center justify-between px-4 py-2 shadow-md">
       <div className="flex items-center justify-center gap-2">

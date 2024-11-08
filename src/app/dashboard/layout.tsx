@@ -1,12 +1,7 @@
 import { redirect } from "next/navigation";
 import { DashboardHeader } from "~/components/dashboard/dashboard-header";
 import { DashboardSidebar } from "~/components/dashboard/dashboard-sidebar";
-import {
-  SidebarInput,
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "~/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { auth } from "~/server/auth";
 import { HydrateClient } from "~/trpc/server";
 
