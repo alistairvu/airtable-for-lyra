@@ -25,7 +25,9 @@ export default async function Home() {
 
           <div className="mt-4 flex flex-col gap-2 lg:flex-row">
             {session?.user ? (
-              <Button size="lg">Go to dashboard</Button>
+              <Link href="/dashboard">
+                <Button size="lg">Go to dashboard</Button>
+              </Link>
             ) : (
               <Link href="/login">
                 <Button size="lg">Get started </Button>
