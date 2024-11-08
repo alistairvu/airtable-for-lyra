@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import { DashboardSidebar } from "~/components/dashboard/dashboard-sidebar";
-import { SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar";
+import {
+  SidebarInput,
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "~/components/ui/sidebar";
 import { auth } from "~/server/auth";
 import { HydrateClient } from "~/trpc/server";
 
@@ -19,10 +24,12 @@ export default async function DashboardLayout({
     <HydrateClient>
       <SidebarProvider>
         <DashboardSidebar />
-        <main>
-          <SidebarTrigger />
-          {children}
-        </main>
+        <SidebarInset>
+          <main>
+            <SidebarTrigger />
+            {children}
+          </main>
+        </SidebarInset>
       </SidebarProvider>
     </HydrateClient>
   );
