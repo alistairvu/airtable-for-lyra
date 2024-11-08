@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { DashboardHeader } from "~/components/dashboard/dashboard-header";
 import { DashboardSidebar } from "~/components/dashboard/dashboard-sidebar";
 import {
   SidebarInput,
@@ -26,7 +27,7 @@ export default async function DashboardLayout({
         <DashboardSidebar />
         <SidebarInset>
           <main>
-            <SidebarTrigger />
+            <DashboardHeader />
             {children}
           </main>
         </SidebarInset>
