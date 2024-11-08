@@ -1,6 +1,10 @@
+import { auth, signOut } from "~/server/auth";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
-export const LandingHeader = () => {
+export const LandingHeader = async () => {
+  const session = await auth();
+
   return (
     <div className="flex items-center justify-between px-4 py-2 shadow-md">
       <div className="">
@@ -8,9 +12,20 @@ export const LandingHeader = () => {
       </div>
 
       <div className="flex gap-2">
-        <Button>Sign up for free</Button>
-
-        <Button variant="outline">Log in</Button>
+        {session?.user ? (
+          <form
+            action={async () => {
+              "use server";
+              await signOut();
+            }}
+          >
+            <Button variant="outline">Log out</Button>
+          </form>
+        ) : (
+          <Link href="/login">
+            <Button size="lg">Get started </Button>
+          </Link>
+        )}
       </div>
     </div>
   );

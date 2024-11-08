@@ -1,16 +1,12 @@
 import { LandingHeader } from "~/components/landing/landing-header";
 import { Button } from "~/components/ui/button";
+import Link from "next/link";
 
 import { auth } from "~/server/auth";
-import { api, HydrateClient } from "~/trpc/server";
+import { HydrateClient } from "~/trpc/server";
 
 export default async function Home() {
-  const hello = await api.post.hello({ text: "from tRPC" });
   const session = await auth();
-
-  // if (session?.user) {
-  //   void api.post.getLatest.prefetch();
-  // }
 
   return (
     <HydrateClient>
@@ -28,11 +24,13 @@ export default async function Home() {
           </h2>
 
           <div className="mt-4 flex flex-col gap-2 lg:flex-row">
-            <Button size="lg">Sign up for free</Button>
-
-            <Button variant="outline" size="lg">
-              Log in
-            </Button>
+            {session?.user ? (
+              <Button size="lg">Go to dashboard</Button>
+            ) : (
+              <Link href="/login">
+                <Button size="lg">Get started </Button>
+              </Link>
+            )}
           </div>
         </div>
       </main>
