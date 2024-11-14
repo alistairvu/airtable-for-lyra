@@ -50,6 +50,7 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
+    bases         Base[]
 }
 
 model VerificationToken {
@@ -58,4 +59,76 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model Base {
+    id        String   @id @default(uuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    name   String
+    tables Table[]
+
+    user   User   @relation(fields: [userId], references: [id])
+    userId String
+}
+
+model Table {
+    id        String   @id @default(uuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    index Int
+
+    name    String
+    rows    Row[]
+    base    Base?    @relation(fields: [baseId], references: [id])
+    baseId  String?
+    columns Column[]
+}
+
+enum ColumnType {
+    TEXT
+    NUMBER
+}
+
+model Column {
+    id        String   @id @default(uuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    index Int
+
+    name String
+    type ColumnType
+
+    table   Table  @relation(fields: [tableId], references: [id])
+    tableId String
+    cells   Cell[]
+}
+
+model Row {
+    id        String   @id @default(uuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    table   Table?  @relation(fields: [tableId], references: [id])
+    tableId String?
+
+    index Int
+    cells Cell[]
+}
+
+model Cell {
+    id       String @id @default(uuid())
+    row      Row    @relation(fields: [rowId], references: [id])
+    column   Column @relation(fields: [columnId], references: [id])
+    rowId    String
+    columnId String
+
+    intValue  Int?
+    textValue String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
