@@ -1,3 +1,4 @@
+import { BaseContainer } from "~/components/base/base-container";
 import { api } from "~/trpc/server";
 
 type BaseProps = {
@@ -13,5 +14,5 @@ export default async function BasePage({
 
   const base = await api.base.get({ baseId });
 
-  return <h1>{base.name}</h1>;
+  return <BaseContainer base={base} />;
 }
