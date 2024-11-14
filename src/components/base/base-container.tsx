@@ -7,16 +7,19 @@ import { BaseSidebar } from "./base-sidebar";
 
 type BaseHeaderInfoProps = {
   base: BaseWithTables;
+  children?: React.ReactNode;
 };
 
-export const BaseContainer = ({ base }: BaseHeaderInfoProps) => {
+export const BaseContainer = ({ base, children }: BaseHeaderInfoProps) => {
   return (
     <div className="">
       <SidebarProvider>
         <SidebarInset>
           <BaseContainerHeader />
 
-          <BaseSidebar />
+          {/* <BaseSidebar /> */}
+
+          {children}
         </SidebarInset>
       </SidebarProvider>
     </div>

@@ -195,16 +195,12 @@ export class TableController {
       },
     });
 
-    const maxIndex = rowIndex._max;
-
-    if (maxIndex.index === null) {
-      return null;
-    }
+    const maxIndex = rowIndex._max ?? 0;
 
     // Adds new row
     const newRow = await this.db.row.create({
       data: {
-        index: maxIndex.index + 1,
+        index: (maxIndex.index ?? 0) + 1,
         tableId,
 
         cells: {
@@ -224,6 +220,8 @@ export class TableController {
         },
       },
     });
+
+    console.log({ newRow });
 
     return newRow;
   }

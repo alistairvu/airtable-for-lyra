@@ -13,8 +13,6 @@ export class BaseController {
    * @param userId The user corresponding to the new base.
    */
   async create(userId: string) {
-    console.log({ userId });
-
     // Count the number of bases a user already has
     const baseCount = await this.db.base.count({
       where: {
@@ -106,5 +104,33 @@ export class BaseController {
     }
 
     return base;
+  }
+
+  /**
+   * Returns the very first table associated with a base
+   */
+  async getFirstTable(baseId: string, userId: string) {
+    const base = await this.db.base.findFirst({
+      where: {
+        id: baseId,
+        userId,
+      },
+      include: {
+        tables: {
+          orderBy: {
+            index: "asc",
+          },
+        },
+      },
+    });
+
+    if (base === null) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: `Base with ID ${baseId} does not exist, or you cannot access it.`,
+      });
+    }
+
+    return base.tables[0];
   }
 }

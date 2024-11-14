@@ -1,3 +1,4 @@
+import { notFound, redirect } from "next/navigation";
 import { BaseContainer } from "~/components/base/base-container";
 import { api } from "~/trpc/server";
 
@@ -11,8 +12,11 @@ export default async function BasePage({
   params: Promise<BaseProps>;
 }) {
   const baseId = (await params).baseId;
+  const tableId = await api.base.getFirstTable({ baseId });
 
-  const base = await api.base.get({ baseId });
+  if (tableId === undefined) {
+    notFound();
+  }
 
-  return <BaseContainer base={base} />;
+  redirect(`/base/${baseId}/${tableId.id}`);
 }
