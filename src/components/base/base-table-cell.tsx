@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { TableInput } from "../ui/table-input";
 import { type CellContext } from "@tanstack/react-table";
 import { type RowWithCells } from "~/@types";
+import { cn } from "~/lib/utils";
 
 type BaseTableCellProps = CellContext<RowWithCells, string | number>;
 
@@ -34,7 +35,10 @@ export const BaseTableCell = ({
 
   return (
     <TableInput
-      className="my-0 rounded-none border-hidden px-2 shadow-none"
+      className={cn(
+        "my-0 rounded-none border-hidden px-2 shadow-none",
+        column.getIsSorted() && "bg-[#f4e9e4]",
+      )}
       value={typeof value === "string" ? value : isNaN(value) ? "" : value}
       onChange={(e) =>
         table.options.meta?.isNumber?.(column.id)

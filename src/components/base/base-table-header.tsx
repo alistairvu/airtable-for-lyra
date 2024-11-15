@@ -8,6 +8,7 @@ import {
   ArrowDownZA,
   ChevronDown,
   PencilIcon,
+  X,
 } from "lucide-react";
 import { NumberColumnIcon } from "../icons/number-column-icon";
 import { TextColumnIcon } from "../icons/text-column-icon";
@@ -15,10 +16,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { cn } from "~/lib/utils";
 
 type BaseTableHeaderProps = {
   column: Column<RowWithCells, string | number>;
@@ -36,7 +37,10 @@ export const BaseTableHeader = ({
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="flex h-[30px] w-full items-center justify-between text-black"
+          className={cn(
+            "flex h-[30px] w-full items-center justify-between text-black",
+            column.getIsSorted() && "bg-[#fef3ee]",
+          )}
           style={{
             fontSize: "13px",
             color: "#333333",
@@ -78,6 +82,13 @@ export const BaseTableHeader = ({
         >
           {isNumber ? <ArrowDown10 /> : <ArrowDownZA />}
           {isNumber ? "Sort Decreasing" : "Sort Z → A"}
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => column.clearSorting()}
+        >
+          <X /> Remove Sort
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
