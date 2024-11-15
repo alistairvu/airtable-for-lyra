@@ -29,6 +29,7 @@ import { v4 as uuidv4 } from "uuid";
 import { BaseTableHeader } from "./base-table-header";
 import { cn } from "~/lib/utils";
 import { PlusIcon } from "lucide-react";
+import { BaseContainerHeader } from "./base-container-header";
 
 type BaseTableProps = {
   tableId: string;
@@ -60,6 +61,10 @@ export const BaseTable = ({
 
   // SECTION: Sorting state
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  // SECTION: State related to search
+  const [isSearching, setIsSearching] = useState(false);
+  const [query, setQuery] = useState("");
 
   // Loading in data
   const { data: columns } = api.table.getColumns.useQuery(tableId, {
@@ -219,7 +224,9 @@ export const BaseTable = ({
           isNumber={col.type === "NUMBER"}
         />
       ),
-      cell: BaseTableCell,
+      cell: (props) => (
+        <BaseTableCell {...props} query={query} isSearching={isSearching} />
+      ),
     }),
   );
 
@@ -300,6 +307,15 @@ export const BaseTable = ({
       className="h-screen w-screen overflow-auto"
       style={{ fontSize: "13px" }}
     >
+      <BaseContainerHeader
+        isSearching={isSearching}
+        setIsSearching={setIsSearching}
+        query={query}
+        setQuery={setQuery}
+      />
+
+      {/* <BaseSidebar /> */}
+
       <Table style={{ width: table.getTotalSize() * 2 }}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

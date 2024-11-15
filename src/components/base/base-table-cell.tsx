@@ -4,13 +4,18 @@ import { type CellContext } from "@tanstack/react-table";
 import { type RowWithCells } from "~/@types";
 import { cn } from "~/lib/utils";
 
-type BaseTableCellProps = CellContext<RowWithCells, string | number>;
+type BaseTableCellProps = CellContext<RowWithCells, string | number> & {
+  query: string;
+  isSearching?: boolean;
+};
 
 export const BaseTableCell = ({
   getValue,
   row,
   column,
   table,
+  query,
+  isSearching,
 }: BaseTableCellProps) => {
   const initialValue = getValue();
   const [value, setValue] = useState(initialValue ?? "");
@@ -33,11 +38,23 @@ export const BaseTableCell = ({
     }
   };
 
+  const matchesQuery = () => {
+    if (!isSearching) {
+      return false;
+    }
+
+    if (query === "") {
+      return false;
+    }
+
+    return String(value).includes(query);
+  };
+
   return (
     <TableInput
       className={cn(
         "my-0 rounded-none border-hidden px-2 shadow-none",
-        column.getIsSorted() && "bg-[#f4e9e4]",
+        (column.getIsSorted() || matchesQuery()) && "bg-[#f4e9e4]",
       )}
       value={typeof value === "string" ? value : isNaN(value) ? "" : value}
       onChange={(e) =>
