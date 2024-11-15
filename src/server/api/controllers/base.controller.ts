@@ -133,4 +133,56 @@ export class BaseController {
 
     return base.tables[0];
   }
+
+  /**
+   * Returns the very first table associated with a base
+   */
+  async createTable(baseId: string, userId: string) {
+    const base = await this.db.base.findFirst({
+      where: {
+        id: baseId,
+        userId,
+      },
+      include: {
+        tables: {
+          orderBy: {
+            index: "asc",
+          },
+        },
+      },
+    });
+
+    if (base === null) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: `Base with ID ${baseId} does not exist, or you cannot access it.`,
+      });
+    }
+
+    const table = await this.db.table.create({
+      data: {
+        baseId,
+        index: base.tables.length,
+        name: `Table ${base.tables.length + 1}`,
+
+        // Creating the columns of the default table
+        columns: {
+          create: [
+            {
+              index: 0,
+              name: "Name",
+              type: "TEXT",
+            },
+            {
+              index: 1,
+              name: "Age",
+              type: "NUMBER",
+            },
+          ],
+        },
+      },
+    });
+
+    return table;
+  }
 }

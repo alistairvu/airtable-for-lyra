@@ -21,14 +21,12 @@ import {
 } from "../ui/table";
 import { BaseTableCell } from "./base-table-cell";
 import { api } from "~/trpc/react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import { useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { v4 as uuidv4 } from "uuid";
 import { BaseTableHeader } from "./base-table-header";
 import { cn } from "~/lib/utils";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, TableCellsMerge } from "lucide-react";
 import { BaseContainerHeader } from "./base-container-header";
 
 type BaseTableProps = {
@@ -57,7 +55,6 @@ export const BaseTable = ({
 }: BaseTableProps) => {
   // Query client
   const utils = api.useUtils();
-  const queryClient = useQueryClient();
 
   // SECTION: Sorting state
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -77,17 +74,95 @@ export const BaseTable = ({
 
   // SECTION: Mutations for editing a text cell
   const editTextCell = api.table.editTextCell.useMutation({
+    onMutate: async ({ value, cellId }) => {
+      // Cancel query
+      await utils.table.getRows.cancel();
+
+      // Snapshot previous value
+      const previousRows = utils.table.getRows.getData(tableId);
+
+      // Optimistically update
+      utils.table.getRows.setData(tableId, (data) => {
+        if (!data) {
+          return [];
+        }
+
+        return data.map((row) => {
+          const matchingCell = row.cells.find((cell) => cell.id === cellId);
+
+          if (matchingCell === null) {
+            return row;
+          }
+
+          return {
+            ...row,
+            cells: row.cells.map((cell) => {
+              if (cell.id !== cellId) {
+                return cell;
+              }
+
+              return { ...cell, textValue: value };
+            }),
+          };
+        });
+      });
+
+      return { previousRows };
+    },
+
+    onError: (_err, _newRow, context) => {
+      utils.table.getRows.setData(tableId, context?.previousRows ?? []);
+    },
+
     onSettled: async () => {
-      const queryKey = getQueryKey(api.table.getRows, tableId, "any");
-      await queryClient.invalidateQueries({ queryKey });
+      await utils.table.getRows.invalidate(tableId);
     },
   });
 
   // SECTION: Mutations for editing a text cell
   const editIntCell = api.table.editIntCell.useMutation({
+    onMutate: async ({ value, cellId }) => {
+      // Cancel query
+      await utils.table.getRows.cancel();
+
+      // Snapshot previous value
+      const previousRows = utils.table.getRows.getData(tableId);
+
+      // Optimistically update
+      utils.table.getRows.setData(tableId, (data) => {
+        if (!data) {
+          return [];
+        }
+
+        return data.map((row) => {
+          const matchingCell = row.cells.find((cell) => cell.id === cellId);
+
+          if (matchingCell === null) {
+            return row;
+          }
+
+          return {
+            ...row,
+            cells: row.cells.map((cell) => {
+              if (cell.id !== cellId) {
+                return cell;
+              }
+
+              return { ...cell, intValue: value, textValue: String(value) };
+            }),
+          };
+        });
+      });
+
+      return { previousRows };
+    },
+
+    onError: (_err, _newRow, context) => {
+      utils.table.getRows.setData(tableId, context?.previousRows ?? []);
+    },
+
     onSettled: async () => {
-      const queryKey = getQueryKey(api.table.getRows, tableId, "any");
-      await queryClient.invalidateQueries({ queryKey });
+      await utils.table.getRows.invalidate(tableId);
     },
   });
 
@@ -364,7 +439,9 @@ export const BaseTable = ({
             height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
           }}
         >
-          {table.getRowModel().rows.map((row, index) => {
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const row = tableRows[virtualRow.index]!;
+
             return (
               <TableRow
                 key={row.id}
@@ -372,7 +449,7 @@ export const BaseTable = ({
                 data-state={row.getIsSelected() && "selected"}
               >
                 <TableCell className="text-center text-slate-400">
-                  {index + 1}
+                  {virtualRow.index + 1}
                 </TableCell>
                 {row.getVisibleCells().map((cell) => {
                   return (
