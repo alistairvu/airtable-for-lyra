@@ -185,4 +185,35 @@ export class BaseController {
 
     return table;
   }
+
+  /**
+   * Gets all tables associated with a base
+   *
+   * @param baseId
+   * @param userId
+   */
+  async getTables(baseId: string, userId: string) {
+    const base = await this.db.base.findFirst({
+      where: {
+        id: baseId,
+        userId,
+      },
+      include: {
+        tables: {
+          orderBy: {
+            index: "asc",
+          },
+        },
+      },
+    });
+
+    if (base === null) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: `Base with ID ${baseId} does not exist, or you cannot access it.`,
+      });
+    }
+
+    return base.tables;
+  }
 }

@@ -49,6 +49,21 @@ export const baseRouter = createTRPCRouter({
       return controller.getFirstTable(baseId, user.id);
     }),
 
+  getAllTables: protectedProcedure
+    .input(
+      z.object({
+        baseId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const controller = new BaseController(ctx.db);
+
+      const { baseId } = input;
+      const { user } = ctx.session;
+
+      return controller.getTables(baseId, user.id);
+    }),
+
   createTable: protectedProcedure
     .input(
       z.object({

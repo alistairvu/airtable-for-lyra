@@ -5,6 +5,7 @@ import { api, HydrateClient } from "~/trpc/server";
 
 type BaseProps = {
   baseId: string;
+  tableId?: string;
 };
 
 export default async function BasePage({
