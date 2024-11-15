@@ -27,6 +27,8 @@ import { useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { v4 as uuidv4 } from "uuid";
 import { BaseTableHeader } from "./base-table-header";
+import { cn } from "~/lib/utils";
+import { PlusIcon } from "lucide-react";
 
 type BaseTableProps = {
   tableId: string;
@@ -191,8 +193,8 @@ export const BaseTable = ({
     },
 
     onSettled: async () => {
-      await utils.table.getRows.invalidate(tableId);
       await utils.table.getColumns.invalidate(tableId);
+      await utils.table.getRows.invalidate(tableId);
     },
   });
 
@@ -211,7 +213,11 @@ export const BaseTable = ({
         return `${cell?.textValue}`;
       },
       header: ({ column }) => (
-        <BaseTableHeader column={column} name={col.name} />
+        <BaseTableHeader
+          column={column}
+          name={col.name}
+          isNumber={col.type === "NUMBER"}
+        />
       ),
       cell: BaseTableCell,
     }),
@@ -278,7 +284,7 @@ export const BaseTable = ({
 
   const rowVirtualizer = useVirtualizer({
     count: tableRows.length,
-    estimateSize: () => 50,
+    estimateSize: () => 32,
     getScrollElement: () => tableContainerRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
@@ -289,18 +295,26 @@ export const BaseTable = ({
   });
 
   return (
-    <div ref={tableContainerRef} className="h-screen w-screen overflow-auto">
+    <div
+      ref={tableContainerRef}
+      className="h-screen w-screen overflow-auto"
+      style={{ fontSize: "13px" }}
+    >
       <Table style={{ width: table.getTotalSize() * 2 }}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              <TableHead className="w-4 bg-slate-100" />
+            <TableRow key={headerGroup.id} className="h-8 text-black">
+              <TableHead className="w-4 bg-[#f5f5f5]" />
               {headerGroup.headers.map((header) => {
                 return (
                   <TableHead
                     key={header.id}
-                    className="border bg-slate-100"
-                    style={{ width: header.getSize() }}
+                    className="h-6 border border-l-0 border-t-0 bg-[#f5f5f5] pl-[1px] pt-[1px]"
+                    style={{
+                      width: header.getSize(),
+                      borderBottom: "1px solid hsl(0, 0%, 82%)",
+                      fontSize: 13,
+                    }}
                   >
                     {header.isPlaceholder
                       ? null
@@ -317,10 +331,12 @@ export const BaseTable = ({
                 );
               })}
               <TableHead
-                className="w-4 cursor-pointer bg-slate-100"
+                className="w-[94px] cursor-pointer bg-[#f5f5f5] hover:bg-slate-200"
                 onClick={() => addTextColumn.mutate({ tableId })}
               >
-                +
+                <div className="flex items-center justify-center">
+                  <PlusIcon className="h-4 w-4" />
+                </div>
               </TableHead>
             </TableRow>
           ))}
@@ -336,14 +352,18 @@ export const BaseTable = ({
             return (
               <TableRow
                 key={row.id}
+                className="h-8"
                 data-state={row.getIsSelected() && "selected"}
               >
-                <TableCell className="border bg-slate-100 p-2 font-semibold text-slate-400">
+                <TableCell className="text-center text-slate-400">
                   {index + 1}
                 </TableCell>
                 {row.getVisibleCells().map((cell) => {
                   return (
-                    <TableCell key={cell.id} className="border py-0">
+                    <TableCell
+                      key={cell.id}
+                      className="h-[32px] border border-l-0 py-0"
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
@@ -357,14 +377,20 @@ export const BaseTable = ({
 
           <TableRow
             onClick={() => addRow.mutate(tableId)}
-            className="cursor-pointer"
+            className="h-8 cursor-pointer"
           >
-            <TableCell className="border bg-slate-100 p-2 font-semibold text-slate-400">
-              +
+            <TableCell className="flex h-8 items-center justify-center border-b text-center text-slate-400">
+              <PlusIcon />
             </TableCell>
 
-            {columns.map((column) => (
-              <TableCell className="border" key={column.id} />
+            {columns.map((column, index) => (
+              <TableCell
+                className={cn(
+                  index + 1 === columns.length ? "border-r" : "border-x-0",
+                  "border-b",
+                )}
+                key={column.id}
+              />
             ))}
           </TableRow>
         </TableBody>
