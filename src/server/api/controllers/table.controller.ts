@@ -218,6 +218,8 @@ export class TableController {
       textValue: "",
     }));
 
+    console.log({ cellData });
+
     await this.db.cell.createMany({
       data: cellData,
     });

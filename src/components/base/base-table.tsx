@@ -130,9 +130,11 @@ export const BaseTable = ({
     onMutate: async () => {
       // Cancel query
       await utils.table.getColumns.cancel();
+      await utils.table.getRows.cancel();
 
       // Snapshot previous value
       const previousColumns = utils.table.getColumns.getData(tableId);
+      const previousRows = utils.table.getRows.getData(tableId);
 
       // Empty column
       const emptyNewColumn = {
@@ -168,19 +170,22 @@ export const BaseTable = ({
               rowId: uuidv4(),
               createdAt: new Date(),
               updatedAt: new Date(),
+              tempId: true,
             },
           ],
         }));
       });
 
-      return { previousColumns };
+      return { previousColumns, previousRows };
     },
 
     onError: (_err, _newRow, context) => {
       utils.table.getColumns.setData(tableId, context?.previousColumns ?? []);
+      utils.table.getRows.setData(tableId, context?.previousRows ?? []);
     },
 
     onSettled: async () => {
+      await utils.table.getRows.invalidate(tableId);
       await utils.table.getColumns.invalidate(tableId);
     },
   });
@@ -269,7 +274,7 @@ export const BaseTable = ({
   });
 
   return (
-    <div ref={tableContainerRef}>
+    <div ref={tableContainerRef} className="h-screen w-screen overflow-auto">
       <Table style={{ width: table.getTotalSize() * 2 }}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -321,11 +326,16 @@ export const BaseTable = ({
                 <TableCell className="border bg-slate-100 p-2 font-semibold text-slate-400">
                   {index + 1}
                 </TableCell>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="border py-0">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
+                {row.getVisibleCells().map((cell) => {
+                  return (
+                    <TableCell key={cell.id} className="border py-0">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             );
           })}
@@ -338,9 +348,9 @@ export const BaseTable = ({
               +
             </TableCell>
 
-            <TableCell className="border" />
-
-            <TableCell className="border" />
+            {columns.map((column) => (
+              <TableCell className="border" key={column.id} />
+            ))}
           </TableRow>
         </TableBody>
       </Table>
