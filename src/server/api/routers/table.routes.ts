@@ -26,6 +26,19 @@ export const tableRouter = createTRPCRouter({
       return row;
     }),
 
+  addTextColumn: protectedProcedure
+    .input(
+      z.object({
+        tableId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const controller = new TableController(ctx.db);
+      const { tableId } = input;
+      const row = await controller.addTextColumn(tableId, ctx.session.user.id);
+      return row;
+    }),
+
   getInfiniteRows: protectedProcedure
     .input(
       z.object({

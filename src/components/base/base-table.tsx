@@ -7,7 +7,7 @@ import {
   type RowData,
   useReactTable,
 } from "@tanstack/react-table";
-import { type Column } from "@prisma/client";
+import { ColumnType, type Column } from "@prisma/client";
 import { type RowWithCells } from "~/@types";
 import {
   Table,
@@ -125,6 +125,66 @@ export const BaseTable = ({
     },
   });
 
+  // SECTION: Mutations for adding a new  text column
+  const addTextColumn = api.table.addTextColumn.useMutation({
+    onMutate: async () => {
+      // Cancel query
+      await utils.table.getColumns.cancel();
+
+      // Snapshot previous value
+      const previousColumns = utils.table.getColumns.getData(tableId);
+
+      // Empty column
+      const emptyNewColumn = {
+        index: (previousColumns?.length ?? 0) + 1,
+        id: uuidv4(),
+        tableId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: "Label",
+        type: ColumnType.TEXT,
+      };
+
+      // Optimistically update the columns
+      utils.table.getColumns.setData(tableId, (data) => {
+        if (!data) {
+          return [emptyNewColumn];
+        }
+
+        return [...data, emptyNewColumn];
+      });
+
+      // Optimistically update the cells
+      utils.table.getRows.setData(tableId, (data) => {
+        return data?.map((row) => ({
+          ...row,
+          cells: [
+            ...row.cells,
+            {
+              columnId: emptyNewColumn.id,
+              intValue: null,
+              textValue: "",
+              id: uuidv4(),
+              rowId: uuidv4(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          ],
+        }));
+      });
+
+      return { previousColumns };
+    },
+
+    onError: (_err, _newRow, context) => {
+      utils.table.getColumns.setData(tableId, context?.previousColumns ?? []);
+    },
+
+    onSettled: async () => {
+      await utils.table.getColumns.invalidate(tableId);
+    },
+  });
+
   // Column definitions
   const columnDef: ColumnDef<RowWithCells, string | number>[] = columns.map(
     (column) => ({
@@ -236,7 +296,12 @@ export const BaseTable = ({
                   </TableHead>
                 );
               })}
-              <TableHead className="w-4 bg-slate-100">+</TableHead>
+              <TableHead
+                className="w-4 cursor-pointer bg-slate-100"
+                onClick={() => addTextColumn.mutate({ tableId })}
+              >
+                +
+              </TableHead>
             </TableRow>
           ))}
         </TableHeader>

@@ -172,6 +172,66 @@ export class TableController {
     });
   }
 
+  /**
+   * Adds a text column to the table.
+   * TODO: Allows user to add arbitrary name
+   *
+   * @param tableId
+   * @param userId
+   */
+  async addTextColumn(tableId: string, userId: string) {
+    await this.findBase(tableId, userId);
+
+    // Get column index
+    const rowIndex = await this.db.row.aggregate({
+      where: {
+        tableId: tableId,
+      },
+      _max: {
+        index: true,
+      },
+    });
+
+    const maxIndex = rowIndex._max;
+
+    // Create the actual column
+    const column = await this.db.column.create({
+      data: {
+        tableId,
+        index: (maxIndex.index ?? 0) + 1,
+        name: "Label",
+        type: "TEXT",
+      },
+    });
+
+    // Appends that column to every row in the table
+    const currentRows = await this.db.row.findMany({
+      where: {
+        tableId,
+      },
+    });
+
+    const cellData = currentRows.map((row) => ({
+      columnId: column.id,
+      rowId: row.id,
+      intValue: null,
+      textValue: "",
+    }));
+
+    await this.db.cell.createMany({
+      data: cellData,
+    });
+
+    return column;
+  }
+
+  /**
+   * Adds a row to the database.
+   *
+   * @param tableId The table to add to.
+   * @param userId The user doing the adding.
+   * @returns The newly created row.
+   */
   async addRow(tableId: string, userId: string) {
     await this.findBase(tableId, userId);
 
@@ -195,7 +255,7 @@ export class TableController {
       },
     });
 
-    const maxIndex = rowIndex._max ?? 0;
+    const maxIndex = rowIndex._max;
 
     // Adds new row
     const newRow = await this.db.row.create({
