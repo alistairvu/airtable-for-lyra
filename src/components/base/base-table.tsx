@@ -215,7 +215,7 @@ export const BaseTable = ({
           return cell?.intValue ?? 0;
         }
 
-        return `${cell?.textValue}`;
+        return cell?.textValue ?? "";
       },
       header: ({ column }) => (
         <BaseTableHeader
