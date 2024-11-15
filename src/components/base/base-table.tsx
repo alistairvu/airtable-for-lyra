@@ -6,6 +6,8 @@ import {
   getCoreRowModel,
   type RowData,
   useReactTable,
+  type SortingState,
+  getSortedRowModel,
 } from "@tanstack/react-table";
 import { ColumnType, type Column } from "@prisma/client";
 import { type RowWithCells } from "~/@types";
@@ -21,9 +23,10 @@ import { BaseTableCell } from "./base-table-cell";
 import { api } from "~/trpc/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { v4 as uuidv4 } from "uuid";
+import { BaseTableHeader } from "./base-table-header";
 
 type BaseTableProps = {
   tableId: string;
@@ -52,6 +55,9 @@ export const BaseTable = ({
   // Query client
   const utils = api.useUtils();
   const queryClient = useQueryClient();
+
+  // SECTION: Sorting state
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   // Loading in data
   const { data: columns } = api.table.getColumns.useQuery(tableId, {
@@ -192,18 +198,21 @@ export const BaseTable = ({
 
   // Column definitions
   const columnDef: ColumnDef<RowWithCells, string | number>[] = columns.map(
-    (column) => ({
-      id: column.id,
+    (col) => ({
+      id: col.id,
+      name: col.name,
       accessorFn: (row: RowWithCells) => {
-        const cell = row.cells.find((cell) => cell.columnId === column.id);
+        const cell = row.cells.find((cell) => cell.columnId === col.id);
 
-        if (column.type === "NUMBER") {
+        if (col.type === "NUMBER") {
           return cell?.intValue ?? 0;
         }
 
         return `${cell?.textValue}`;
       },
-      header: column.name,
+      header: ({ column }) => (
+        <BaseTableHeader column={column} name={col.name} />
+      ),
       cell: BaseTableCell,
     }),
   );
@@ -215,6 +224,12 @@ export const BaseTable = ({
     enableColumnResizing: true,
     getCoreRowModel: getCoreRowModel(),
     columnResizeMode: "onChange",
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+
+    state: {
+      sorting,
+    },
 
     getRowId: (originalRow, _index, _parent) => {
       return originalRow.id;

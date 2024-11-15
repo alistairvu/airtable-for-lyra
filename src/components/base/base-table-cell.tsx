@@ -35,7 +35,7 @@ export const BaseTableCell = ({
   return (
     <TableInput
       className="my-0 rounded-none border-hidden px-2 py-2 shadow-none"
-      value={value}
+      value={typeof value === "string" ? value : isNaN(value) ? "" : value}
       onChange={(e) =>
         table.options.meta?.isNumber?.(column.id)
           ? setValue(e.target.valueAsNumber)
