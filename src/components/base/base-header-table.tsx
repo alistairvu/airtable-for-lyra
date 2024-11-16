@@ -63,8 +63,12 @@ export const BaseHeaderTable = ({ base }: BaseHeaderTableProps) => {
                     {table.name}
                   </div>
                 ) : (
-                  <Link key={table.id} href={`/base/${base.id}/${table.id}`}>
-                    <div className="height-full flex flex-auto cursor-pointer items-center rounded-t p-1 px-3 font-medium text-white hover:bg-rose-800">
+                  <Link
+                    key={table.id}
+                    href={`/base/${base.id}/${table.id}`}
+                    prefetch
+                  >
+                    <div className="height-full flex flex-auto cursor-pointer items-center rounded-t border border-rose-900 p-1 px-3 font-medium text-white hover:bg-rose-800">
                       {table.name}
                     </div>
                   </Link>

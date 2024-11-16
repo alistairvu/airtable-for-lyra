@@ -90,6 +90,40 @@ export const BaseTableHeader = ({
         >
           <X /> Remove Sort
         </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={(e) =>
+            column.setFilterValue(
+              isNumber
+                ? {
+                    mode: "gt",
+                    value: 0,
+                  }
+                : true,
+            )
+          }
+        >
+          {isNumber ? "Filter > 0" : "Filter Empty"}
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={(e) =>
+            column.setFilterValue(isNumber ? { mode: "lt", value: 0 } : false)
+          }
+        >
+          {isNumber ? "Filter < 0" : "Filter Not Empty"}
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={(e) => column.setFilterValue(undefined)}
+        >
+          Clear Filter
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

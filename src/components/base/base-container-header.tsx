@@ -2,16 +2,24 @@ import { type Dispatch, type SetStateAction } from "react";
 import { SidebarTrigger } from "../ui/sidebar";
 import { BaseTableFilter } from "./base-table-filter";
 import { BaseTableSearch } from "./base-table-search";
+import { ColumnFiltersState } from "@tanstack/react-table";
+import { Column } from "@prisma/client";
 
 type BaseContainerHeaderProps = {
+  columns: Column[];
+
   isSearching: boolean;
   setIsSearching: Dispatch<SetStateAction<boolean>>;
   query: string;
   setQuery: Dispatch<SetStateAction<string>>;
+
+  columnFilters: ColumnFiltersState;
+  setColumnFilters: Dispatch<SetStateAction<ColumnFiltersState>>;
 };
 
 export const BaseContainerHeader = (props: BaseContainerHeaderProps) => {
   const { isSearching, setIsSearching, query, setQuery } = props;
+  const { columns, columnFilters, setColumnFilters } = props;
 
   return (
     <div
@@ -21,7 +29,11 @@ export const BaseContainerHeader = (props: BaseContainerHeaderProps) => {
       <div className="flex items-center justify-center">
         {/* <SidebarTrigger /> */}
 
-        <BaseTableFilter />
+        <BaseTableFilter
+          columnFilters={columnFilters}
+          setColumnFilters={setColumnFilters}
+          columns={columns}
+        />
       </div>
 
       <div className="">

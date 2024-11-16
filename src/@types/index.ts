@@ -7,3 +7,8 @@ export type RowWithCells = Row & {
 export type BaseWithTables = Base & {
   tables: Table[];
 };
+
+export type IntFilter = {
+  mode: "lt" | "gt";
+  value: number | null;
+};

@@ -94,7 +94,46 @@ export const BaseTable = ({
     (col) => ({
       id: col.id,
       name: col.name,
-      filterFn: col.type === "NUMBER" ? "inNumberRange" : "equalsString",
+      filterFn:
+        col.type === "NUMBER"
+          ? (row, columnId, filterValue) => {
+              const cell = row
+                .getAllCells()
+                .find((cell) => cell.column.id === columnId);
+
+              if (cell && typeof cell.getValue() === "number") {
+                const { mode, value } = filterValue;
+
+                if (value === null) {
+                  return true;
+                }
+
+                if (mode == "gt") {
+                  return value < (cell.getValue() as number);
+                }
+
+                if (mode == "lt") {
+                  return value > (cell.getValue() as number);
+                }
+
+                return true;
+              }
+
+              return false;
+            }
+          : (row, columnId, filterValue) => {
+              const cell = row
+                .getAllCells()
+                .find((cell) => cell.column.id === columnId);
+
+              if (cell) {
+                return filterValue
+                  ? cell.getValue() === ""
+                  : cell.getValue() !== "";
+              }
+
+              return false;
+            },
 
       accessorFn: (row: RowWithCells) => {
         const cell = row.cells.find((cell) => cell.columnId === col.id);
@@ -207,6 +246,9 @@ export const BaseTable = ({
         setIsSearching={setIsSearching}
         query={query}
         setQuery={setQuery}
+        columnFilters={columnFilters}
+        setColumnFilters={setColumnFilters}
+        columns={columns}
       />
 
       {/* <BaseSidebar /> */}
