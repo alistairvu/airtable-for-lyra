@@ -95,7 +95,7 @@ export const BaseTableHeader = ({
 
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={(e) =>
+          onClick={() =>
             column.setFilterValue(
               isNumber
                 ? {
@@ -111,7 +111,7 @@ export const BaseTableHeader = ({
 
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={(e) =>
+          onClick={() =>
             column.setFilterValue(isNumber ? { mode: "lt", value: 0 } : false)
           }
         >
@@ -120,7 +120,7 @@ export const BaseTableHeader = ({
 
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={(e) => column.setFilterValue(undefined)}
+          onClick={() => column.setFilterValue(undefined)}
         >
           Clear Filter
         </DropdownMenuItem>

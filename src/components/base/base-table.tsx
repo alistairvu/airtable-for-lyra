@@ -8,11 +8,11 @@ import {
   useReactTable,
   type SortingState,
   getSortedRowModel,
-  ColumnFiltersState,
+  type ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table";
-import { ColumnType, type Column } from "@prisma/client";
-import { type RowWithCells } from "~/@types";
+import { type Column } from "@prisma/client";
+import { type IntFilter, type RowWithCells } from "~/@types";
 import {
   Table,
   TableBody,
@@ -25,10 +25,9 @@ import { BaseTableCell } from "./base-table-cell";
 import { api } from "~/trpc/react";
 import { useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { v4 as uuidv4 } from "uuid";
 import { BaseTableHeader } from "./base-table-header";
 import { cn } from "~/lib/utils";
-import { PlusIcon, TableCellsMerge } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { BaseContainerHeader } from "./base-container-header";
 import { useEditIntCell, useEditTextCell } from "~/hooks/use-edit-cell";
 import { useAddTextColumn } from "~/hooks/use-add-column";
@@ -102,7 +101,7 @@ export const BaseTable = ({
                 .find((cell) => cell.column.id === columnId);
 
               if (cell && typeof cell.getValue() === "number") {
-                const { mode, value } = filterValue;
+                const { mode, value } = filterValue as IntFilter;
 
                 if (value === null) {
                   return true;

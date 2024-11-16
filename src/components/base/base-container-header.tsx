@@ -1,9 +1,8 @@
 import { type Dispatch, type SetStateAction } from "react";
-import { SidebarTrigger } from "../ui/sidebar";
 import { BaseTableFilter } from "./base-table-filter";
 import { BaseTableSearch } from "./base-table-search";
-import { ColumnFiltersState } from "@tanstack/react-table";
-import { Column } from "@prisma/client";
+import { type ColumnFiltersState } from "@tanstack/react-table";
+import { type Column } from "@prisma/client";
 
 type BaseContainerHeaderProps = {
   columns: Column[];
