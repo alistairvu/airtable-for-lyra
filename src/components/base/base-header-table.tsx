@@ -37,9 +37,9 @@ export const BaseHeaderTable = ({ base }: BaseHeaderTableProps) => {
   );
 
   const addTableMutation = api.base.createTable.useMutation({
-    onSuccess: (data, _variables, _context) => {
+    onSuccess: async (data, _variables, _context) => {
       router.replace(`/base/${base.id}/${data.id}`);
-      utils.base.getAllTables.invalidate({ baseId: base.id });
+      await utils.base.getAllTables.invalidate({ baseId: base.id });
     },
   });
 

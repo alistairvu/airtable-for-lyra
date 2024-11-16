@@ -8,6 +8,8 @@ import {
   useReactTable,
   type SortingState,
   getSortedRowModel,
+  ColumnFiltersState,
+  getFilteredRowModel,
 } from "@tanstack/react-table";
 import { ColumnType, type Column } from "@prisma/client";
 import { type RowWithCells } from "~/@types";
@@ -28,6 +30,9 @@ import { BaseTableHeader } from "./base-table-header";
 import { cn } from "~/lib/utils";
 import { PlusIcon, TableCellsMerge } from "lucide-react";
 import { BaseContainerHeader } from "./base-container-header";
+import { useEditIntCell, useEditTextCell } from "~/hooks/use-edit-cell";
+import { useAddTextColumn } from "~/hooks/use-add-column";
+import { useAddRow } from "~/hooks/use-add-row";
 
 type BaseTableProps = {
   tableId: string;
@@ -53,11 +58,11 @@ export const BaseTable = ({
   initialColumns,
   rowCount,
 }: BaseTableProps) => {
-  // Query client
-  const utils = api.useUtils();
-
   // SECTION: Sorting state
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  // SECTION: Filter state
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   // SECTION: State related to search
   const [isSearching, setIsSearching] = useState(false);
@@ -73,216 +78,24 @@ export const BaseTable = ({
   const rows = getRowsQuery.data ?? [];
 
   // SECTION: Mutations for editing a text cell
-  const editTextCell = api.table.editTextCell.useMutation({
-    onMutate: async ({ value, cellId }) => {
-      // Cancel query
-      await utils.table.getRows.cancel();
-
-      // Snapshot previous value
-      const previousRows = utils.table.getRows.getData(tableId);
-
-      // Optimistically update
-      utils.table.getRows.setData(tableId, (data) => {
-        if (!data) {
-          return [];
-        }
-
-        return data.map((row) => {
-          const matchingCell = row.cells.find((cell) => cell.id === cellId);
-
-          if (matchingCell === null) {
-            return row;
-          }
-
-          return {
-            ...row,
-            cells: row.cells.map((cell) => {
-              if (cell.id !== cellId) {
-                return cell;
-              }
-
-              return { ...cell, textValue: value };
-            }),
-          };
-        });
-      });
-
-      return { previousRows };
-    },
-
-    onError: (_err, _newRow, context) => {
-      utils.table.getRows.setData(tableId, context?.previousRows ?? []);
-    },
-
-    onSettled: async () => {
-      await utils.table.getRows.invalidate(tableId);
-    },
-  });
+  const editTextCell = useEditTextCell(tableId);
 
   // SECTION: Mutations for editing a text cell
-  const editIntCell = api.table.editIntCell.useMutation({
-    onMutate: async ({ value, cellId }) => {
-      // Cancel query
-      await utils.table.getRows.cancel();
-
-      // Snapshot previous value
-      const previousRows = utils.table.getRows.getData(tableId);
-
-      // Optimistically update
-      utils.table.getRows.setData(tableId, (data) => {
-        if (!data) {
-          return [];
-        }
-
-        return data.map((row) => {
-          const matchingCell = row.cells.find((cell) => cell.id === cellId);
-
-          if (matchingCell === null) {
-            return row;
-          }
-
-          return {
-            ...row,
-            cells: row.cells.map((cell) => {
-              if (cell.id !== cellId) {
-                return cell;
-              }
-
-              return { ...cell, intValue: value, textValue: String(value) };
-            }),
-          };
-        });
-      });
-
-      return { previousRows };
-    },
-
-    onError: (_err, _newRow, context) => {
-      utils.table.getRows.setData(tableId, context?.previousRows ?? []);
-    },
-
-    onSettled: async () => {
-      await utils.table.getRows.invalidate(tableId);
-    },
-  });
+  const editIntCell = useEditIntCell(tableId);
 
   // SECTION: Mutations for adding a new row
-  const addRow = api.table.addRow.useMutation({
-    onMutate: async () => {
-      // Cancel query
-      await utils.table.getRows.cancel();
+  const addRow = useAddRow({ tableId, columns, rowCount });
 
-      // Snapshot previous value
-      const previousRows = utils.table.getRows.getData(tableId);
-
-      const emptyNewRow = {
-        index: rowCount,
-        id: uuidv4(),
-        tableId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        cells: columns.map((column) => ({
-          columnId: column.id,
-          intValue: column.type === "NUMBER" ? 0 : null,
-          textValue: "",
-          id: uuidv4(),
-          rowId: uuidv4(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })),
-      };
-
-      // Optimistically update
-      utils.table.getRows.setData(tableId, (data) => {
-        if (!data) {
-          return [emptyNewRow];
-        }
-
-        return [...data, emptyNewRow];
-      });
-
-      return { previousRows };
-    },
-
-    onError: (_err, _newRow, context) => {
-      utils.table.getRows.setData(tableId, context?.previousRows ?? []);
-    },
-
-    onSettled: async () => {
-      await utils.table.getRows.invalidate(tableId);
-    },
-  });
-
-  // SECTION: Mutations for adding a new  text column
-  const addTextColumn = api.table.addTextColumn.useMutation({
-    onMutate: async () => {
-      // Cancel query
-      await utils.table.getColumns.cancel();
-      await utils.table.getRows.cancel();
-
-      // Snapshot previous value
-      const previousColumns = utils.table.getColumns.getData(tableId);
-      const previousRows = utils.table.getRows.getData(tableId);
-
-      // Empty column
-      const emptyNewColumn = {
-        index: (previousColumns?.length ?? 0) + 1,
-        id: uuidv4(),
-        tableId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        name: "Label",
-        type: ColumnType.TEXT,
-      };
-
-      // Optimistically update the columns
-      utils.table.getColumns.setData(tableId, (data) => {
-        if (!data) {
-          return [emptyNewColumn];
-        }
-
-        return [...data, emptyNewColumn];
-      });
-
-      // Optimistically update the cells
-      utils.table.getRows.setData(tableId, (data) => {
-        return data?.map((row) => ({
-          ...row,
-          cells: [
-            ...row.cells,
-            {
-              columnId: emptyNewColumn.id,
-              intValue: null,
-              textValue: "",
-              id: uuidv4(),
-              rowId: uuidv4(),
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              tempId: true,
-            },
-          ],
-        }));
-      });
-
-      return { previousColumns, previousRows };
-    },
-
-    onError: (_err, _newRow, context) => {
-      utils.table.getColumns.setData(tableId, context?.previousColumns ?? []);
-      utils.table.getRows.setData(tableId, context?.previousRows ?? []);
-    },
-
-    onSettled: async () => {
-      await utils.table.getColumns.invalidate(tableId);
-      await utils.table.getRows.invalidate(tableId);
-    },
-  });
+  // SECTION: Mutations for adding a new text column
+  const addTextColumn = useAddTextColumn(tableId);
 
   // Column definitions
   const columnDef: ColumnDef<RowWithCells, string | number>[] = columns.map(
     (col) => ({
       id: col.id,
       name: col.name,
+      filterFn: col.type === "NUMBER" ? "inNumberRange" : "equalsString",
+
       accessorFn: (row: RowWithCells) => {
         const cell = row.cells.find((cell) => cell.columnId === col.id);
 
@@ -292,6 +105,7 @@ export const BaseTable = ({
 
         return cell?.textValue ?? "";
       },
+
       header: ({ column }) => (
         <BaseTableHeader
           column={column}
@@ -299,6 +113,7 @@ export const BaseTable = ({
           isNumber={col.type === "NUMBER"}
         />
       ),
+
       cell: (props) => (
         <BaseTableCell {...props} query={query} isSearching={isSearching} />
       ),
@@ -312,11 +127,16 @@ export const BaseTable = ({
     enableColumnResizing: true,
     getCoreRowModel: getCoreRowModel(),
     columnResizeMode: "onChange",
+
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
 
+    onColumnFiltersChange: setColumnFilters,
+    getFilteredRowModel: getFilteredRowModel(),
+
     state: {
       sorting,
+      columnFilters,
     },
 
     getRowId: (originalRow, _index, _parent) => {
