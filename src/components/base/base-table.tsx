@@ -224,7 +224,7 @@ export const BaseTable = ({
 
   const rowVirtualizer = useVirtualizer({
     count: tableRows.length,
-    estimateSize: () => 35,
+    estimateSize: () => 32,
     getScrollElement: () => tableContainerRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
@@ -262,7 +262,7 @@ export const BaseTable = ({
               display: "grid",
               position: "sticky",
               top: 0,
-              zIndex: 1000,
+              zIndex: 1,
               width: "100%",
             }}
           >
