@@ -12,10 +12,8 @@ type BaseHeaderInfoProps = {
 
 export const BaseContainer = ({ base, children }: BaseHeaderInfoProps) => {
   return (
-    <div className="">
-      <SidebarProvider>
-        <SidebarInset>{children}</SidebarInset>
-      </SidebarProvider>
-    </div>
+    <SidebarProvider>
+      <SidebarInset>{children}</SidebarInset>
+    </SidebarProvider>
   );
 };
