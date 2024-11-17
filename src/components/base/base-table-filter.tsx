@@ -1,4 +1,4 @@
-import { Filter, Plus, Trash } from "lucide-react";
+import { ListFilter, Plus, Trash } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { type ColumnFiltersState } from "@tanstack/react-table";
@@ -329,8 +329,8 @@ export const BaseTableFilter = ({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost">
-          <Filter />
+        <Button variant="ghost" size="sm" className="px-2 py-1">
+          <ListFilter />
           Filter
         </Button>
       </PopoverTrigger>
