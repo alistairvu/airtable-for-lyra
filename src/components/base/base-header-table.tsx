@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { type BaseWithTables } from "~/@types";
@@ -44,15 +44,10 @@ export const BaseHeaderTable = ({ base }: BaseHeaderTableProps) => {
   });
 
   return (
-    <div className="flex h-8 bg-rose-700 text-white">
-      <div
-        className="relative flex flex-auto"
-        style={{
-          clipPath: "inset(-3px 0px 0px)",
-        }}
-      >
-        <div className="absolute bottom-0 left-0 right-0 top-0 pl-[0.75rem]">
-          <div className="ml-[-0.25rem] flex flex-auto overflow-auto pl-1">
+    <div className="flex h-8 bg-rose-600 text-white">
+      <div className="relative flex flex-auto rounded-tr-lg">
+        <div className="absolute bottom-0 left-0 right-0 top-0 rounded-tr-lg bg-rose-800 pl-[0.75rem]">
+          <div className="ml-[-0.25rem] flex flex-auto overflow-auto bg-rose-800 pl-1">
             <nav className="flex flex-none" aria-label="Tables">
               {tables.map((table, index) =>
                 isSelected(table.id, index) ? (
@@ -74,19 +69,33 @@ export const BaseHeaderTable = ({ base }: BaseHeaderTableProps) => {
                   </Link>
                 ),
               )}
-
-              <button
-                className="h-[32px] w-[40px] rounded-t text-center hover:bg-rose-800"
-                aria-label="Add or import table"
-                onClick={() => addTableMutation.mutate({ baseId: base.id })}
-              >
-                <div className="flex items-center justify-center">
-                  <Plus className="h-4 w-4" />
-                </div>
-              </button>
             </nav>
+
+            <button
+              className="h-[32px] w-[40px] rounded-t text-center hover:bg-rose-800"
+              aria-label="Add or import table"
+              onClick={() => addTableMutation.mutate({ baseId: base.id })}
+            >
+              <div className="flex items-center justify-center">
+                <Plus className="h-4 w-4" />
+              </div>
+            </button>
+
+            <div className="rounded-tr-lg px-2" />
           </div>
         </div>
+      </div>
+
+      <div className="ml-1 flex gap-1 bg-rose-800">
+        <button className="h-[32px] rounded-t px-3 py-1 text-center text-[13px] hover:text-gray-100">
+          Extensions
+        </button>
+
+        <button className="h-[32px] rounded-t px-3 py-1 text-center text-[13px] hover:text-gray-100">
+          <div className="flex items-center justify-center gap-1">
+            Tools <ChevronDown className="h-4 w-4" />
+          </div>
+        </button>
       </div>
     </div>
   );

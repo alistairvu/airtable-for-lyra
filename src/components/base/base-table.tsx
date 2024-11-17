@@ -231,7 +231,7 @@ export const BaseTable = ({
       typeof window !== "undefined" && !navigator.userAgent.includes("Firefox")
         ? (element) => element?.getBoundingClientRect().height
         : undefined,
-    overscan: 5,
+    overscan: 20,
   });
 
   return (
