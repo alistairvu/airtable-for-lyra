@@ -10,7 +10,15 @@ type BaseHeaderProps = {
 
 export const BaseHeader = ({ base }: BaseHeaderProps) => {
   return (
-    <div>
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        zIndex: 10,
+        width: "100%",
+      }}
+    >
       <BaseHeaderInfo base={base} />
       <BaseHeaderTable base={base} />
     </div>

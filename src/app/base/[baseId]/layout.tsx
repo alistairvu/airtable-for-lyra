@@ -21,9 +21,11 @@ export default async function BasePage({
 
   return (
     <HydrateClient>
-      <BaseHeader base={base} />
+      <div className="relative">
+        <BaseHeader base={base} />
 
-      <main>{children}</main>
+        <main>{children}</main>
+      </div>
     </HydrateClient>
   );
 }

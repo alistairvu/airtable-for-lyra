@@ -5,7 +5,7 @@ import { faker } from "@faker-js/faker";
 const prisma = new PrismaClient();
 async function main() {
   // TODO: Replace with the original table ID.
-  const tableId = `753f1fef-7cbc-41aa-8df8-61b9acf18689`;
+  const tableId = `9a8a1a9f-c866-4c5f-a09d-25641cf48319`;
 
   console.log("Generating columns");
   const table = await prisma.table.findUnique({
@@ -35,7 +35,7 @@ async function main() {
   const ageId = columns.find((x) => x.name === "Age")?.id;
 
   // Generate the 100k rows
-  const limit = 15000;
+  const limit = 15;
   console.log("Generating data...");
   const data = Array.from(Array(limit).keys()).map((_, index) => ({
     tableId: table.id,

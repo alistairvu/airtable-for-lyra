@@ -224,7 +224,7 @@ export const BaseTable = ({
 
   const rowVirtualizer = useVirtualizer({
     count: tableRows.length,
-    estimateSize: () => 32,
+    estimateSize: () => 35,
     getScrollElement: () => tableContainerRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
@@ -235,7 +235,7 @@ export const BaseTable = ({
   });
 
   return (
-    <div style={{ fontSize: "13px" }}>
+    <div style={{ fontSize: "13px", marginTop: "88px" }}>
       <BaseContainerHeader
         isSearching={isSearching}
         setIsSearching={setIsSearching}
@@ -250,17 +250,29 @@ export const BaseTable = ({
 
       <div
         ref={tableContainerRef}
-        style={{ height: "800px", overflow: "auto", position: "relative" }}
+        style={{
+          height: "calc(100vh - 88px - 44px)",
+          overflow: "auto",
+          position: "relative",
+        }}
       >
         <Table style={{ display: "grid" }}>
           <TableHeader
-            style={{ display: "grid", position: "sticky", top: 0, zIndex: 1 }}
+            style={{
+              display: "grid",
+              position: "sticky",
+              top: 0,
+              zIndex: 1000,
+              width: "100%",
+            }}
           >
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
                 className="h-8 text-black"
-                style={{ display: "flex", width: "100%" }}
+                style={{
+                  display: "flex",
+                }}
               >
                 <TableHead className="w-12 bg-[#f5f5f5]" />
                 {headerGroup.headers.map((header) => {
@@ -304,7 +316,7 @@ export const BaseTable = ({
           <TableBody
             style={{
               display: "grid",
-              height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
+              height: `${rowVirtualizer.getTotalSize() + 64}px`, //tells scrollbar how big the table is
               position: "relative",
             }}
           >
