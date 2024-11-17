@@ -53,7 +53,7 @@ export const BaseTableCell = ({
   return (
     <TableInput
       className={cn(
-        "my-0 rounded-none border-hidden px-2 shadow-none",
+        "my-0 rounded-none border-none px-2 shadow-none",
         (column.getIsSorted() || matchesQuery()) && "bg-[#f4e9e4]",
       )}
       value={typeof value === "string" ? value : isNaN(value) ? "" : value}

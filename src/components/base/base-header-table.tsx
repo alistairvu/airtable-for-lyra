@@ -47,7 +47,7 @@ export const BaseHeaderTable = ({ base }: BaseHeaderTableProps) => {
     <div className="flex h-8 bg-rose-600 text-white">
       <div className="relative flex flex-auto rounded-tr-lg">
         <div className="absolute bottom-0 left-0 right-0 top-0 rounded-tr-lg bg-rose-700 pl-[0.75rem]">
-          <div className="ml-[-0.25rem] flex flex-auto overflow-auto bg-rose-700 pl-1">
+          <div className="ml-[-0.25rem] flex flex-auto overflow-auto rounded-tr-lg bg-rose-700 pl-1">
             <nav className="flex flex-none" aria-label="Tables">
               {tables.map((table, index) =>
                 isSelected(table.id, index) ? (
@@ -86,7 +86,7 @@ export const BaseHeaderTable = ({ base }: BaseHeaderTableProps) => {
         </div>
       </div>
 
-      <div className="ml-1 flex gap-1 bg-rose-700">
+      <div className="ml-1 flex gap-1 rounded-tl-lg bg-rose-700">
         <button className="h-[32px] rounded-t px-3 py-1 text-center text-[13px] hover:text-gray-100">
           Extensions
         </button>

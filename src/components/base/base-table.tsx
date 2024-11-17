@@ -231,7 +231,7 @@ export const BaseTable = ({
       typeof window !== "undefined" && !navigator.userAgent.includes("Firefox")
         ? (element) => element?.getBoundingClientRect().height
         : undefined,
-    overscan: 20,
+    overscan: 10,
   });
 
   return (
@@ -329,6 +329,7 @@ export const BaseTable = ({
                     <TableRow
                       data-index={virtualRow.index}
                       data-state={row.getIsSelected() && "selected"}
+                      ref={(node) => rowVirtualizer.measureElement(node)}
                       style={{
                         display: "flex",
                         position: "absolute",
