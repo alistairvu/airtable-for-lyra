@@ -1,3 +1,5 @@
+"use client";
+
 import { type Dispatch, type SetStateAction } from "react";
 import { BaseTableFilter } from "./base-table-filter";
 import { BaseTableSearch } from "./base-table-search";
@@ -16,8 +18,10 @@ import { GridFeatureIcon } from "../icons/grid-feature-icon";
 import { GroupIcon } from "../icons/group-icon";
 import { RowHeightIcon } from "../icons/row-height-icon";
 import { Separator } from "../ui/separator";
+import { UsersThreeIcon } from "../icons/users-three-icon";
+import { SidebarTrigger, useSidebar } from "../ui/sidebar";
 
-type BaseContainerHeaderProps = {
+type BaseTableActionsProps = {
   columns: Column[];
 
   isSearching: boolean;
@@ -29,9 +33,10 @@ type BaseContainerHeaderProps = {
   setColumnFilters: Dispatch<SetStateAction<ColumnFiltersState>>;
 };
 
-export const BaseContainerHeader = (props: BaseContainerHeaderProps) => {
+export const BaseTableActions = (props: BaseTableActionsProps) => {
   const { isSearching, setIsSearching, query, setQuery } = props;
   const { columns, columnFilters, setColumnFilters } = props;
+  const { toggleSidebar } = useSidebar();
 
   return (
     <div
@@ -39,8 +44,12 @@ export const BaseContainerHeader = (props: BaseContainerHeaderProps) => {
       style={{ boxShadow: "rgba(200, 200, 200) 0 1px 0 0" }}
     >
       <div className="flex items-center justify-center gap-1 overflow-auto">
-        {/* <SidebarTrigger /> */}
-        <Button variant="ghost" size="sm" className="px-2 py-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="px-2 py-1"
+          onClick={toggleSidebar}
+        >
           <Menu /> Views
         </Button>
 
@@ -51,11 +60,12 @@ export const BaseContainerHeader = (props: BaseContainerHeaderProps) => {
 
         <Button variant="ghost" size="sm" className="px-2 py-1">
           <GridFeatureIcon className="fill-blue-600" /> Grid view{" "}
+          <UsersThreeIcon className="h-4 w-4" />
           <ChevronDown className="h-4 w-4" />
         </Button>
 
         <Button variant="ghost" size="sm" className="px-2 py-1">
-          <EyeOff /> Hide fields
+          <EyeOff /> <span className="hidden lg:block">Hide fields</span>
         </Button>
 
         <BaseTableFilter
@@ -65,15 +75,15 @@ export const BaseContainerHeader = (props: BaseContainerHeaderProps) => {
         />
 
         <Button variant="ghost" size="sm" className="px-2 py-1">
-          <GroupIcon /> Group
+          <GroupIcon /> <span className="hidden lg:block">Group</span>
         </Button>
 
         <Button variant="ghost" size="sm" className="px-2 py-1">
-          <ArrowUpDown /> Sort
+          <ArrowUpDown /> <span className="hidden lg:block">Sort</span>
         </Button>
 
         <Button variant="ghost" size="sm" className="px-2 py-1">
-          <PaintBucket /> Color
+          <PaintBucket /> <span className="hidden lg:block">Color</span>
         </Button>
 
         <Button variant="ghost" size="icon" className="px-2 py-1">
@@ -81,7 +91,8 @@ export const BaseContainerHeader = (props: BaseContainerHeaderProps) => {
         </Button>
 
         <Button variant="ghost" size="sm" className="px-2 py-1">
-          <ExternalLink /> Share and sync
+          <ExternalLink />{" "}
+          <span className="hidden lg:block">Share and sync</span>
         </Button>
       </div>
 

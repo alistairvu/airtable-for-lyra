@@ -28,10 +28,11 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { BaseTableHeader } from "./base-table-header";
 import { cn } from "~/lib/utils";
 import { PlusIcon } from "lucide-react";
-import { BaseContainerHeader } from "./base-container-header";
+import { BaseTableActions } from "./base-table-actions";
 import { useEditIntCell, useEditTextCell } from "~/hooks/use-edit-cell";
 import { useAddTextColumn } from "~/hooks/use-add-column";
 import { useAddRow } from "~/hooks/use-add-row";
+import { BaseSidebar } from "./base-sidebar";
 
 type BaseTableProps = {
   tableId: string;
@@ -236,7 +237,7 @@ export const BaseTable = ({
 
   return (
     <div style={{ fontSize: "13px", marginTop: "88px" }}>
-      <BaseContainerHeader
+      <BaseTableActions
         isSearching={isSearching}
         setIsSearching={setIsSearching}
         query={query}
@@ -246,193 +247,153 @@ export const BaseTable = ({
         columns={columns}
       />
 
-      {/* <BaseSidebar /> */}
+      <div className="flex">
+        <BaseSidebar />
 
-      <div
-        ref={tableContainerRef}
-        style={{
-          height: "calc(100vh - 88px - 44px)",
-          overflow: "auto",
-          position: "relative",
-        }}
-      >
-        <Table style={{ display: "grid" }}>
-          <TableHeader
-            style={{
-              display: "grid",
-              position: "sticky",
-              top: 0,
-              zIndex: 1,
-              width: "100%",
-            }}
-          >
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="h-8 text-black"
-                style={{
-                  display: "flex",
-                }}
-              >
-                <TableHead className="w-12 bg-[#f5f5f5]" />
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead
-                      key={header.id}
-                      className="h-8 border border-l-0 border-t-0 bg-[#f5f5f5] pl-[1px] pt-[1px]"
-                      style={{
-                        width: header.getSize(),
-                        borderBottom: "1px solid hsl(0, 0%, 82%)",
-                        fontSize: 13,
-                        display: "flex",
-                      }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                      <div
-                        onMouseDown={header.getResizeHandler()}
-                        onTouchStart={header.getResizeHandler()}
-                        className="absolute right-0 top-0 h-full w-1 bg-slate-600 opacity-0"
-                      />
-                    </TableHead>
-                  );
-                })}
-                <TableHead
-                  className="h-8 w-[94px] cursor-pointer bg-[#f5f5f5] hover:bg-slate-200"
-                  onClick={() => addTextColumn.mutate({ tableId })}
-                >
-                  <div className="flex h-8 items-center justify-center">
-                    <PlusIcon className="h-4 w-4" />
-                  </div>
-                </TableHead>
-              </TableRow>
-            ))}
-          </TableHeader>
-
-          <TableBody
-            style={{
-              display: "grid",
-              height: `${rowVirtualizer.getTotalSize() + 64}px`, //tells scrollbar how big the table is
-              position: "relative",
-            }}
-          >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const row = tableRows[virtualRow.index]!;
-
-              if (virtualRow.index + 1 === rows.length) {
-                return (
-                  <React.Fragment key={row.id}>
-                    <TableRow
-                      data-index={virtualRow.index}
-                      data-state={row.getIsSelected() && "selected"}
-                      ref={(node) => rowVirtualizer.measureElement(node)}
-                      style={{
-                        display: "flex",
-                        position: "absolute",
-                        transform: `translateY(${virtualRow.start}px)`,
-                      }}
-                    >
-                      <TableCell className="w-12 text-center text-slate-400">
-                        <div className="flex h-full items-center justify-center">
-                          {virtualRow.index + 1}
-                        </div>
-                      </TableCell>
-                      {row.getVisibleCells().map((cell) => {
-                        return (
-                          <TableCell
-                            key={cell.id}
-                            className="h-[32px] border border-l-0 py-0"
-                            style={{
-                              display: "flex",
-                              width: cell.column.getSize(),
-                            }}
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-
-                    <TableRow
-                      onClick={() => addRow.mutate(tableId)}
-                      className="h-8 cursor-pointer"
-                      style={{
-                        display: "flex",
-                        position: "absolute",
-                        transform: `translateY(${virtualRow.start + 32}px)`,
-                      }}
-                    >
-                      <TableCell className="flex h-8 w-12 items-center justify-center border-b text-center text-slate-400">
-                        <PlusIcon />
-                      </TableCell>
-
-                      {row.getVisibleCells().map((cell, index) => {
-                        return (
-                          <TableCell
-                            key={cell.id + "-add"}
-                            className={cn(
-                              index + 1 === columns.length
-                                ? "border-r"
-                                : "border-x-0",
-                              "border-b",
-                            )}
-                            style={{
-                              display: "flex",
-                              width: cell.column.getSize(),
-                            }}
-                          />
-                        );
-                      })}
-                    </TableRow>
-                  </React.Fragment>
-                );
-              }
-
-              return (
+        <div
+          ref={tableContainerRef}
+          style={{
+            height: "calc(100vh - 88px - 44px)",
+            overflow: "auto",
+            position: "relative",
+          }}
+        >
+          <Table style={{ display: "grid" }}>
+            <TableHeader
+              style={{
+                display: "grid",
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+                width: "100%",
+              }}
+            >
+              {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
-                  key={row.id}
-                  data-index={virtualRow.index}
-                  data-state={row.getIsSelected() && "selected"}
+                  key={headerGroup.id}
+                  className="h-8 text-black"
                   style={{
                     display: "flex",
-                    position: "absolute",
-                    transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
-                  <TableCell className="w-12 text-center text-slate-400">
-                    <div className="flex h-full items-center justify-center">
-                      {virtualRow.index + 1}
-                    </div>
-                  </TableCell>
-                  {row.getVisibleCells().map((cell) => {
+                  <TableHead className="w-12 bg-[#f5f5f5]" />
+                  {headerGroup.headers.map((header) => {
                     return (
-                      <TableCell
-                        key={cell.id}
-                        className="h-[32px] border border-l-0 py-0"
+                      <TableHead
+                        key={header.id}
+                        className="h-8 border border-l-0 border-t-0 bg-[#f5f5f5] pl-[1px] pt-[1px]"
                         style={{
+                          width: header.getSize(),
+                          borderBottom: "1px solid hsl(0, 0%, 82%)",
+                          fontSize: 13,
                           display: "flex",
-                          width: cell.column.getSize(),
                         }}
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          className="absolute right-0 top-0 h-full w-1 bg-slate-600 opacity-0"
+                        />
+                      </TableHead>
                     );
                   })}
+                  <TableHead
+                    className="h-8 w-[94px] cursor-pointer bg-[#f5f5f5] hover:bg-slate-200"
+                    onClick={() => addTextColumn.mutate({ tableId })}
+                  >
+                    <div className="flex h-8 items-center justify-center">
+                      <PlusIcon className="h-4 w-4" />
+                    </div>
+                  </TableHead>
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+
+            <TableBody
+              style={{
+                display: "grid",
+                height: `${rowVirtualizer.getTotalSize() + 64}px`, //tells scrollbar how big the table is
+                position: "relative",
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const row = tableRows[virtualRow.index]!;
+
+                return (
+                  <TableRow
+                    key={row.id}
+                    data-index={virtualRow.index}
+                    data-state={row.getIsSelected() && "selected"}
+                    style={{
+                      display: "flex",
+                      position: "absolute",
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <TableCell className="w-12 text-center text-slate-400">
+                      <div className="flex h-full items-center justify-center">
+                        {virtualRow.index + 1}
+                      </div>
+                    </TableCell>
+                    {row.getVisibleCells().map((cell) => {
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          className="h-[32px] border border-l-0 py-0"
+                          style={{
+                            display: "flex",
+                            width: cell.column.getSize(),
+                          }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })}
+              <TableRow
+                onClick={() => addRow.mutate(tableId)}
+                className="h-8 cursor-pointer"
+                style={{
+                  display: "flex",
+                  position: "absolute",
+                  transform: `translateY(${rowVirtualizer.getTotalSize()}px)`,
+                }}
+              >
+                <TableCell className="flex h-8 w-12 items-center justify-center border-b text-center text-slate-400">
+                  <PlusIcon />
+                </TableCell>
+
+                {columns.map((column, index) => {
+                  return (
+                    <TableCell
+                      key={column.id}
+                      className={cn(
+                        index + 1 === columns.length
+                          ? "border-r"
+                          : "border-x-0",
+                        "border-b",
+                      )}
+                      style={{
+                        display: "flex",
+                      }}
+                    />
+                  );
+                })}
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );

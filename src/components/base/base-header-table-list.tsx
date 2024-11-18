@@ -10,7 +10,7 @@ type BaseHeaderTableProps = {
   base: BaseWithTables;
 };
 
-export const BaseHeaderTable = ({ base }: BaseHeaderTableProps) => {
+export const BaseHeaderTableList = ({ base }: BaseHeaderTableProps) => {
   // Query client
   const utils = api.useUtils();
 
@@ -48,14 +48,14 @@ export const BaseHeaderTable = ({ base }: BaseHeaderTableProps) => {
       <div className="relative flex flex-auto rounded-tr-lg">
         <div className="absolute bottom-0 left-0 right-0 top-0 rounded-tr-lg bg-rose-700 pl-[0.75rem]">
           <div className="ml-[-0.25rem] flex flex-auto overflow-auto rounded-tr-lg bg-rose-700 pl-1">
-            <nav className="flex flex-none" aria-label="Tables">
+            <nav className="flex flex-none text-[13px]" aria-label="Tables">
               {tables.map((table, index) =>
                 isSelected(table.id, index) ? (
                   <div
                     key={table.id}
                     className="height-full flex flex-auto cursor-pointer items-center rounded-t bg-white p-1 px-3 font-medium text-black"
                   >
-                    {table.name}
+                    {table.name} <ChevronDown className="ml-1 h-4 w-4" />
                   </div>
                 ) : (
                   <Link
@@ -63,7 +63,7 @@ export const BaseHeaderTable = ({ base }: BaseHeaderTableProps) => {
                     href={`/base/${base.id}/${table.id}`}
                     prefetch
                   >
-                    <div className="height-full flex flex-auto cursor-pointer items-center rounded-t border border-rose-800 p-1 px-3 font-medium text-white hover:bg-rose-700">
+                    <div className="height-full flex flex-auto cursor-pointer items-center rounded-t border border-rose-800 p-1 px-3 text-white hover:bg-rose-700">
                       {table.name}
                     </div>
                   </Link>
@@ -86,7 +86,7 @@ export const BaseHeaderTable = ({ base }: BaseHeaderTableProps) => {
         </div>
       </div>
 
-      <div className="ml-1 flex gap-1 rounded-tl-lg bg-rose-700">
+      <div className="ml-2 flex gap-1 rounded-tl-lg bg-rose-700">
         <button className="h-[32px] rounded-t px-3 py-1 text-center text-[13px] hover:text-gray-100">
           Extensions
         </button>

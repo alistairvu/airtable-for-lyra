@@ -61,7 +61,7 @@ export const BaseHeaderInfo = ({ base }: BaseHeaderInfoProps) => {
           <p className="text-[13px] leading-normal">Share</p>
         </div>
 
-        <div className="flex h-[28px] cursor-pointer items-center justify-center rounded-full bg-white px-3 text-red-500">
+        <div className="flex h-[28px] cursor-pointer items-center justify-center rounded-full bg-white p-[6px] text-red-500">
           <Bell className="h-4 w-4 border-red-500" />
         </div>
       </div>

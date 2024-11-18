@@ -331,7 +331,7 @@ export const BaseTableFilter = ({
       <PopoverTrigger asChild>
         <Button variant="ghost" size="sm" className="px-2 py-1">
           <ListFilter />
-          Filter
+          <span className="hidden lg:block">Filter</span>
         </Button>
       </PopoverTrigger>
 

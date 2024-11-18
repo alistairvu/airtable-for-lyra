@@ -1,7 +1,7 @@
 "use client";
 
 import { BaseHeaderInfo } from "./base-header-info";
-import { BaseHeaderTable } from "./base-header-table";
+import { BaseHeaderTableList } from "./base-header-table-list";
 import { type BaseWithTables } from "~/@types";
 
 type BaseHeaderProps = {
@@ -20,7 +20,7 @@ export const BaseHeader = ({ base }: BaseHeaderProps) => {
       }}
     >
       <BaseHeaderInfo base={base} />
-      <BaseHeaderTable base={base} />
+      <BaseHeaderTableList base={base} />
     </div>
   );
 };

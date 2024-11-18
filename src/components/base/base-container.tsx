@@ -1,7 +1,7 @@
 "use client";
 
 import { type BaseWithTables } from "~/@types";
-import { BaseContainerHeader } from "./base-container-header";
+import { BaseTableActions } from "./base-table-actions";
 import { SidebarInset, SidebarProvider } from "../ui/sidebar";
 import { BaseSidebar } from "./base-sidebar";
 
