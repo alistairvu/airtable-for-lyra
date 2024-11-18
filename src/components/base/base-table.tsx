@@ -345,7 +345,7 @@ export const BaseTable = ({
                       return (
                         <TableCell
                           key={cell.id}
-                          className="h-[32px] border border-l-0 py-0"
+                          className="h-[32px] border border-b-0 border-l-0 border-t-0 py-0"
                           style={{
                             display: "flex",
                             width: cell.column.getSize(),
