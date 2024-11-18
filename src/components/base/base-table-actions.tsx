@@ -66,7 +66,7 @@ export const BaseTableActions = (props: BaseTableActionsProps) => {
         </Button>
 
         <Button variant="ghost" size="sm" className="px-2 py-1">
-          <EyeOff /> <span className="hidden lg:block">Hide fields</span>
+          <EyeOff /> <span className="hidden md:block">Hide fields</span>
         </Button>
 
         <BaseTableFilter
@@ -76,15 +76,15 @@ export const BaseTableActions = (props: BaseTableActionsProps) => {
         />
 
         <Button variant="ghost" size="sm" className="px-2 py-1">
-          <GroupIcon /> <span className="hidden lg:block">Group</span>
+          <GroupIcon /> <span className="hidden md:block">Group</span>
         </Button>
 
         <Button variant="ghost" size="sm" className="px-2 py-1">
-          <ArrowUpDown /> <span className="hidden lg:block">Sort</span>
+          <ArrowUpDown /> <span className="hidden md:block">Sort</span>
         </Button>
 
         <Button variant="ghost" size="sm" className="px-2 py-1">
-          <PaintBucket /> <span className="hidden lg:block">Color</span>
+          <PaintBucket /> <span className="hidden md:block">Color</span>
         </Button>
 
         <Button variant="ghost" size="icon" className="px-2 py-1">
@@ -93,7 +93,7 @@ export const BaseTableActions = (props: BaseTableActionsProps) => {
 
         <Button variant="ghost" size="sm" className="px-2 py-1">
           <ExternalLink />{" "}
-          <span className="hidden lg:block">Share and sync</span>
+          <span className="hidden md:block">Share and sync</span>
         </Button>
       </div>
 

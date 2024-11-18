@@ -17,7 +17,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -294,7 +293,7 @@ export const BaseTable = ({
                           key={header.id}
                           className="h-8 border border-l-0 border-t-0 bg-[#f5f5f5] pl-[1px] pt-[1px]"
                           style={{
-                            width: header.getSize(),
+                            width: header.getSize() * 1.5,
                             borderBottom: "1px solid hsl(0, 0%, 82%)",
                             fontSize: 13,
                             display: "flex",
@@ -359,7 +358,7 @@ export const BaseTable = ({
                             className="h-[32px] border border-b-0 border-l-0 border-t-0 py-0"
                             style={{
                               display: "flex",
-                              width: cell.column.getSize(),
+                              width: cell.column.getSize() * 1.5,
                             }}
                           >
                             {flexRender(
@@ -400,7 +399,7 @@ export const BaseTable = ({
                           )}
                           style={{
                             display: "flex",
-                            width: column.getSize(),
+                            width: column.getSize() * 1.5,
                           }}
                         />
                       );
