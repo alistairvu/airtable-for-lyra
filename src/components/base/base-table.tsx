@@ -23,7 +23,13 @@ import {
 } from "../ui/table";
 import { BaseTableCell } from "./base-table-cell";
 import { api } from "~/trpc/react";
-import React, { useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { BaseTableHeader } from "./base-table-header";
 import { cn } from "~/lib/utils";
@@ -77,9 +83,23 @@ export const BaseTable = ({
     initialData: initialColumns,
   });
 
-  const getRowsQuery = api.table.getRows.useQuery(tableId);
+  const {
+    data: infiniteRowsData,
+    fetchNextPage,
+    isFetching,
+    isLoading,
+  } = api.table.getInfiniteRows.useInfiniteQuery(
+    { tableId, limit: 100 },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
 
-  const rows = getRowsQuery.data ?? [];
+  const rows = useMemo(
+    () => infiniteRowsData?.pages.flatMap((page) => page.items) ?? [],
+    [infiniteRowsData],
+  );
+  const totalFetched = rows.length;
 
   // SECTION: Mutations for editing a text cell
   const editTextCell = useEditTextCell(tableId);
@@ -241,6 +261,28 @@ export const BaseTable = ({
     overscan: 10,
   });
 
+  // Setting up infinite scrolling
+  const fetchMoreOnBottomReached = useCallback(
+    (containerRefElement?: HTMLDivElement | null) => {
+      if (containerRefElement) {
+        const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
+        //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
+        if (
+          scrollHeight - scrollTop - clientHeight < 1000 &&
+          !isFetching &&
+          totalFetched < rowCount
+        ) {
+          fetchNextPage();
+        }
+      }
+    },
+    [fetchNextPage, isFetching, totalFetched, rowCount],
+  );
+
+  useEffect(() => {
+    fetchMoreOnBottomReached(tableContainerRef.current);
+  }, [fetchMoreOnBottomReached]);
+
   return (
     <TableSidebarContext.Provider
       value={{ open: sidebarOpen, setIsOpen: setSidebarOpen }}
@@ -261,6 +303,9 @@ export const BaseTable = ({
 
           <div
             ref={tableContainerRef}
+            onScroll={(e) =>
+              fetchMoreOnBottomReached(e.target as HTMLDivElement)
+            }
             className="flex-grow"
             style={{
               height: "calc(100vh - 88px - 44px)",
