@@ -17,6 +17,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -152,6 +153,8 @@ export const BaseTable = ({
           isNumber={col.type === "NUMBER"}
         />
       ),
+
+      footer: (props) => props.column.id,
 
       cell: (props) => (
         <BaseTableCell {...props} query={query} isSearching={isSearching} />
@@ -361,36 +364,41 @@ export const BaseTable = ({
                   </TableRow>
                 );
               })}
-              <TableRow
-                onClick={() => addRow.mutate(tableId)}
-                className="h-8 cursor-pointer"
-                style={{
-                  display: "flex",
-                  position: "absolute",
-                  transform: `translateY(${rowVirtualizer.getTotalSize()}px)`,
-                }}
-              >
-                <TableCell className="flex h-8 w-12 items-center justify-center border-b text-center text-slate-400">
-                  <PlusIcon />
-                </TableCell>
 
-                {columns.map((column, index) => {
-                  return (
-                    <TableCell
-                      key={column.id}
-                      className={cn(
-                        index + 1 === columns.length
-                          ? "border-r"
-                          : "border-x-0",
-                        "border-b",
-                      )}
-                      style={{
-                        display: "flex",
-                      }}
-                    />
-                  );
-                })}
-              </TableRow>
+              {table.getFooterGroups().map((footerGroup, index) => (
+                <TableRow
+                  key={footerGroup.id}
+                  onClick={() => addRow.mutate(tableId)}
+                  className="h-8 cursor-pointer"
+                  style={{
+                    display: "flex",
+                    position: "absolute",
+                    transform: `translateY(${rowVirtualizer.getTotalSize() + index * 32}px)`,
+                  }}
+                >
+                  <TableCell className="flex h-8 w-12 items-center justify-center border-b text-center text-slate-400">
+                    <PlusIcon className="h-4 w-4" />
+                  </TableCell>
+
+                  {footerGroup.headers.map((header, index) => {
+                    return (
+                      <TableCell
+                        key={header.id}
+                        className={cn(
+                          index + 1 === columns.length
+                            ? "border-r"
+                            : "border-x-0",
+                          "border-b",
+                        )}
+                        style={{
+                          display: "flex",
+                          width: header.getSize(),
+                        }}
+                      />
+                    );
+                  })}
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
