@@ -1,4 +1,3 @@
-import { notFound, redirect } from "next/navigation";
 import { BaseContainer } from "~/components/base/base-container";
 import { BaseTable } from "~/components/base/base-table";
 import { api } from "~/trpc/server";
@@ -13,14 +12,13 @@ export default async function TablePage({
 }: {
   params: Promise<BaseProps>;
 }) {
-  const baseId = (await params).baseId;
   const tableId = (await params).tableId;
 
-  const firstView = await api.view.getFirstView({ tableId });
+  const columns = await api.table.getColumns(tableId);
 
-  if (!firstView) {
-    notFound();
-  }
+  const { count: rowCount } = await api.table.countRows(tableId);
 
-  redirect(`/base/${baseId}/${tableId}/${firstView.id}`);
+  return (
+    <BaseTable tableId={tableId} initialColumns={columns} rowCount={rowCount} />
+  );
 }

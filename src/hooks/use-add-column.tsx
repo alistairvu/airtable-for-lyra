@@ -7,7 +7,7 @@ import { api } from "~/trpc/react";
  * @param tableId
  * @returns
  */
-export const useAddTextColumn = (tableId: string) => {
+export const useAddTextColumn = (tableId: string, limit = 1000) => {
   const utils = api.useUtils();
 
   // SECTION: Mutations for adding a new  text column
@@ -15,11 +15,14 @@ export const useAddTextColumn = (tableId: string) => {
     onMutate: async () => {
       // Cancel query
       await utils.table.getColumns.cancel();
-      await utils.table.getRows.cancel();
+      await utils.table.getInfiniteRows.cancel();
 
       // Snapshot previous value
       const previousColumns = utils.table.getColumns.getData(tableId);
-      const previousRows = utils.table.getRows.getData(tableId);
+      const previousRows = utils.table.getInfiniteRows.getInfiniteData({
+        tableId,
+        limit,
+      });
 
       // Empty column
       const emptyNewColumn = {
@@ -42,36 +45,64 @@ export const useAddTextColumn = (tableId: string) => {
       });
 
       // Optimistically update the cells
-      utils.table.getRows.setData(tableId, (data) => {
-        return data?.map((row) => ({
-          ...row,
-          cells: [
-            ...row.cells,
-            {
-              columnId: emptyNewColumn.id,
-              intValue: null,
-              textValue: "",
-              id: crypto.randomUUID(),
-              rowId: crypto.randomUUID(),
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              tempId: true,
-            },
-          ],
-        }));
-      });
+      utils.table.getInfiniteRows.setInfiniteData(
+        { tableId, limit },
+        (data) => {
+          if (!data) {
+            return {
+              pages: [],
+              pageParams: [],
+            };
+          }
+
+          const newPages = data.pages.map((page) => {
+            const { items } = page;
+
+            return {
+              ...page,
+              items: items.map((row) => ({
+                ...row,
+                cells: [
+                  ...row.cells,
+                  {
+                    columnId: emptyNewColumn.id,
+                    intValue: null,
+                    textValue: "",
+                    id: crypto.randomUUID(),
+                    rowId: crypto.randomUUID(),
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    tempId: true,
+                  },
+                ],
+              })),
+            };
+          });
+
+          return {
+            ...data,
+            pages: newPages,
+          };
+        },
+      );
 
       return { previousColumns, previousRows };
     },
 
     onError: (_err, _newRow, context) => {
       utils.table.getColumns.setData(tableId, context?.previousColumns ?? []);
-      utils.table.getRows.setData(tableId, context?.previousRows ?? []);
+      utils.table.getInfiniteRows.setInfiniteData(
+        { tableId, limit },
+        context?.previousRows ?? {
+          pages: [],
+          pageParams: [],
+        },
+      );
     },
 
     onSettled: async () => {
       await utils.table.getColumns.invalidate(tableId);
-      await utils.table.getRows.invalidate(tableId);
+      await utils.table.getInfiniteRows.invalidate({ tableId, limit });
     },
   });
 

@@ -65,6 +65,8 @@ export const BaseTable = ({
   initialColumns,
   rowCount,
 }: BaseTableProps) => {
+  const FETCH_LIMIT = 1000;
+
   // SECTION: Sidebar open state
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -89,7 +91,7 @@ export const BaseTable = ({
     isFetching,
     isLoading,
   } = api.table.getInfiniteRows.useInfiniteQuery(
-    { tableId, limit: 100 },
+    { tableId, limit: FETCH_LIMIT },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
@@ -108,7 +110,7 @@ export const BaseTable = ({
   const editIntCell = useEditIntCell(tableId);
 
   // SECTION: Mutations for adding a new row
-  const addRow = useAddRow({ tableId, columns, rowCount });
+  const addRow = useAddRow({ tableId, columns, rowCount, limit: FETCH_LIMIT });
 
   // SECTION: Mutations for adding a new text column
   const addTextColumn = useAddTextColumn(tableId);
@@ -199,6 +201,8 @@ export const BaseTable = ({
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
 
+    manualSorting: true,
+
     state: {
       sorting,
       columnFilters,
@@ -225,6 +229,8 @@ export const BaseTable = ({
         if (!matchingCell) {
           return;
         }
+
+        console.log({ matchingCell });
 
         const cellId = matchingCell.id;
 
@@ -263,7 +269,7 @@ export const BaseTable = ({
 
   // Setting up infinite scrolling
   const fetchMoreOnBottomReached = useCallback(
-    (containerRefElement?: HTMLDivElement | null) => {
+    async (containerRefElement?: HTMLDivElement | null) => {
       if (containerRefElement) {
         const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
         //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
@@ -272,7 +278,7 @@ export const BaseTable = ({
           !isFetching &&
           totalFetched < rowCount
         ) {
-          fetchNextPage();
+          await fetchNextPage();
         }
       }
     },
@@ -280,7 +286,7 @@ export const BaseTable = ({
   );
 
   useEffect(() => {
-    fetchMoreOnBottomReached(tableContainerRef.current);
+    void fetchMoreOnBottomReached(tableContainerRef.current);
   }, [fetchMoreOnBottomReached]);
 
   return (

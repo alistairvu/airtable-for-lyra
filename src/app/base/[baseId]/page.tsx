@@ -12,11 +12,17 @@ export default async function BasePage({
   params: Promise<BaseProps>;
 }) {
   const baseId = (await params).baseId;
-  const tableId = await api.base.getFirstTable({ baseId });
+  const firstTable = await api.base.getFirstTable({ baseId });
 
-  if (tableId === undefined) {
+  if (firstTable === undefined) {
     notFound();
   }
 
-  redirect(`/base/${baseId}/${tableId.id}`);
+  const firstView = await api.view.getFirstView({ tableId: firstTable.id });
+
+  if (!firstView) {
+    notFound();
+  }
+
+  redirect(`/base/${baseId}/${firstTable.id}/${firstView.id}`);
 }

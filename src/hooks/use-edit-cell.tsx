@@ -6,52 +6,73 @@ import { api } from "~/trpc/react";
  * @param tableId The id of the current table.
  * @returns
  */
-export const useEditTextCell = (tableId: string) => {
+export const useEditTextCell = (tableId: string, limit = 1000) => {
   const utils = api.useUtils();
 
   const editTextCell = api.table.editTextCell.useMutation({
     onMutate: async ({ value, cellId }) => {
       // Cancel query
-      await utils.table.getRows.cancel();
+      await utils.table.getInfiniteRows.cancel();
 
       // Snapshot previous value
-      const previousRows = utils.table.getRows.getData(tableId);
+      const previousRows = utils.table.getInfiniteRows.getInfiniteData({
+        tableId,
+        limit,
+      });
+
+      console.log({ previousRows });
 
       // Optimistically update
-      utils.table.getRows.setData(tableId, (data) => {
-        if (!data) {
-          return [];
-        }
-
-        return data.map((row) => {
-          const matchingCell = row.cells.find((cell) => cell.id === cellId);
-
-          if (matchingCell === null) {
-            return row;
+      utils.table.getInfiniteRows.setInfiniteData(
+        { tableId, limit },
+        (data) => {
+          if (!data) {
+            return {
+              pages: [],
+              pageParams: [],
+            };
           }
 
-          return {
-            ...row,
-            cells: row.cells.map((cell) => {
-              if (cell.id !== cellId) {
-                return cell;
-              }
+          const newPages = data.pages.map((page) => {
+            const { items } = page;
 
-              return { ...cell, textValue: value };
-            }),
+            return {
+              ...page,
+              items: items.map((row) => ({
+                ...row,
+                cells: row.cells.map((cell) => {
+                  if (cell.id !== cellId) {
+                    return cell;
+                  }
+
+                  return { ...cell, textValue: value };
+                }),
+              })),
+            };
+          });
+
+          return {
+            ...data,
+            pages: newPages,
           };
-        });
-      });
+        },
+      );
 
       return { previousRows };
     },
 
     onError: (_err, _newRow, context) => {
-      utils.table.getRows.setData(tableId, context?.previousRows ?? []);
+      utils.table.getInfiniteRows.setInfiniteData(
+        { tableId, limit },
+        context?.previousRows ?? {
+          pages: [],
+          pageParams: [],
+        },
+      );
     },
 
     onSettled: async () => {
-      await utils.table.getRows.invalidate(tableId);
+      await utils.table.getInfiniteRows.invalidate({ tableId, limit });
     },
   });
 
@@ -64,52 +85,72 @@ export const useEditTextCell = (tableId: string) => {
  * @param tableId
  * @returns
  */
-export const useEditIntCell = (tableId: string) => {
+export const useEditIntCell = (tableId: string, limit = 1000) => {
   const utils = api.useUtils();
 
   const editIntCell = api.table.editIntCell.useMutation({
     onMutate: async ({ value, cellId }) => {
       // Cancel query
-      await utils.table.getRows.cancel();
+      await utils.table.getInfiniteRows.cancel();
 
       // Snapshot previous value
-      const previousRows = utils.table.getRows.getData(tableId);
+      const previousRows = utils.table.getInfiniteRows.getInfiniteData({
+        tableId,
+        limit,
+      });
+
+      console.log({ previousRows });
 
       // Optimistically update
-      utils.table.getRows.setData(tableId, (data) => {
-        if (!data) {
-          return [];
-        }
-
-        return data.map((row) => {
-          const matchingCell = row.cells.find((cell) => cell.id === cellId);
-
-          if (matchingCell === null) {
-            return row;
+      utils.table.getInfiniteRows.setInfiniteData(
+        { tableId, limit },
+        (data) => {
+          if (!data) {
+            return {
+              pages: [],
+              pageParams: [],
+            };
           }
 
-          return {
-            ...row,
-            cells: row.cells.map((cell) => {
-              if (cell.id !== cellId) {
-                return cell;
-              }
+          const newPages = data.pages.map((page) => {
+            const { items } = page;
 
-              return { ...cell, intValue: value, textValue: String(value) };
-            }),
+            return {
+              ...page,
+              items: items.map((row) => ({
+                ...row,
+                cells: row.cells.map((cell) => {
+                  if (cell.id !== cellId) {
+                    return cell;
+                  }
+                  return { ...cell, intValue: value, textValue: String(value) };
+                }),
+              })),
+            };
+          });
+
+          return {
+            ...data,
+            pages: newPages,
           };
-        });
-      });
+        },
+      );
 
       return { previousRows };
     },
 
     onError: (_err, _newRow, context) => {
-      utils.table.getRows.setData(tableId, context?.previousRows ?? []);
+      utils.table.getInfiniteRows.setInfiniteData(
+        { tableId, limit },
+        context?.previousRows ?? {
+          pages: [],
+          pageParams: [],
+        },
+      );
     },
 
     onSettled: async () => {
-      await utils.table.getRows.invalidate(tableId);
+      await utils.table.getInfiniteRows.invalidate({ tableId, limit });
     },
   });
 
