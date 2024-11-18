@@ -20,6 +20,7 @@ import { RowHeightIcon } from "../icons/row-height-icon";
 import { Separator } from "../ui/separator";
 import { UsersThreeIcon } from "../icons/users-three-icon";
 import { SidebarTrigger, useSidebar } from "../ui/sidebar";
+import { useTableSidebar } from "~/hooks/use-table-sidebar";
 
 type BaseTableActionsProps = {
   columns: Column[];
@@ -36,11 +37,11 @@ type BaseTableActionsProps = {
 export const BaseTableActions = (props: BaseTableActionsProps) => {
   const { isSearching, setIsSearching, query, setQuery } = props;
   const { columns, columnFilters, setColumnFilters } = props;
-  const { toggleSidebar } = useSidebar();
+  const { setIsOpen } = useTableSidebar();
 
   return (
     <div
-      className="relative left-0 right-2 top-0 z-[7] flex h-[44px] items-center justify-between whitespace-nowrap px-1 font-normal"
+      className="sticky left-0 right-2 top-0 z-[7] flex h-[44px] items-center justify-between whitespace-nowrap px-1 font-normal"
       style={{ boxShadow: "rgba(200, 200, 200) 0 1px 0 0" }}
     >
       <div className="flex items-center justify-center gap-1 overflow-auto">
@@ -48,7 +49,7 @@ export const BaseTableActions = (props: BaseTableActionsProps) => {
           variant="ghost"
           size="sm"
           className="px-2 py-1"
-          onClick={toggleSidebar}
+          onClick={() => setIsOpen((prev) => !prev)}
         >
           <Menu /> Views
         </Button>
