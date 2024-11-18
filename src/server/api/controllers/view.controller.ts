@@ -1,4 +1,5 @@
 import { type Prisma, type PrismaClient } from "@prisma/client";
+import { SortingState } from "@tanstack/react-table";
 import { TRPCError } from "@trpc/server";
 
 /**
@@ -142,5 +143,32 @@ export class ViewController {
     });
 
     return views;
+  }
+
+  async get(viewId: string, userId: string) {
+    await this.findBaseByView(viewId, userId);
+
+    return this.db.view.findUnique({
+      where: {
+        id: viewId,
+      },
+    });
+  }
+
+  async setSortState(
+    viewId: string,
+    userId: string,
+    sorting: Prisma.JsonArray,
+  ) {
+    await this.findBaseByView(viewId, userId);
+
+    await this.db.view.update({
+      where: {
+        id: viewId,
+      },
+      data: {
+        sorting,
+      },
+    });
   }
 }

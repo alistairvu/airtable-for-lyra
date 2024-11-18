@@ -10,6 +10,8 @@ import {
   getSortedRowModel,
   type ColumnFiltersState,
   getFilteredRowModel,
+  ColumnSort,
+  type OnChangeFn,
 } from "@tanstack/react-table";
 import { type Column } from "@prisma/client";
 import { type IntFilter, type RowWithCells } from "~/@types";
@@ -40,10 +42,14 @@ import { useAddTextColumn } from "~/hooks/use-add-column";
 import { useAddRow } from "~/hooks/use-add-row";
 import { BaseSidebar } from "./base-sidebar";
 import { TableSidebarContext } from "~/hooks/use-table-sidebar";
+import { useQueryClient } from "@tanstack/react-query";
+import { getQueryKey } from "@trpc/react-query";
 
 type BaseTableProps = {
   tableId: string;
+  viewId: string;
   initialColumns: Column[];
+  initialSorting: SortingState;
   rowCount: number;
 };
 
@@ -62,16 +68,20 @@ declare module "@tanstack/react-table" {
 
 export const BaseTable = ({
   tableId,
+  viewId,
   initialColumns,
   rowCount,
+  initialSorting,
 }: BaseTableProps) => {
   const FETCH_LIMIT = 1000;
+  const utils = api.useUtils();
+  const queryClient = useQueryClient();
 
   // SECTION: Sidebar open state
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // SECTION: Sorting state
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>(initialSorting);
 
   // SECTION: Filter state
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -89,9 +99,8 @@ export const BaseTable = ({
     data: infiniteRowsData,
     fetchNextPage,
     isFetching,
-    isLoading,
   } = api.table.getInfiniteRows.useInfiniteQuery(
-    { tableId, limit: FETCH_LIMIT },
+    { tableId, limit: FETCH_LIMIT, viewId },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
@@ -114,6 +123,38 @@ export const BaseTable = ({
 
   // SECTION: Mutations for adding a new text column
   const addTextColumn = useAddTextColumn(tableId);
+
+  // SECTION: Mutation for editing the cell state
+  const setViewSorting = api.view.setSortState.useMutation({
+    onMutate: () => {
+      queryClient.removeQueries({
+        queryKey: getQueryKey(
+          api.table.getInfiniteRows,
+          { tableId, limit: FETCH_LIMIT },
+          "infinite",
+        ),
+      });
+    },
+
+    onSettled: async () => {
+      await utils.table.getInfiniteRows.invalidate({
+        tableId,
+        limit: FETCH_LIMIT,
+      });
+    },
+  });
+
+  const handleSortingUpdate: OnChangeFn<SortingState> = (updater) => {
+    setSorting(updater);
+  };
+
+  useEffect(() => {
+    setViewSorting.mutate({
+      viewId,
+      sorting,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sorting]);
 
   // Column definitions
   const columnDef: ColumnDef<RowWithCells, string | number>[] = columns.map(
@@ -195,7 +236,7 @@ export const BaseTable = ({
     getCoreRowModel: getCoreRowModel(),
     columnResizeMode: "onChange",
 
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingUpdate,
     getSortedRowModel: getSortedRowModel(),
 
     onColumnFiltersChange: setColumnFilters,
@@ -302,6 +343,8 @@ export const BaseTable = ({
           columnFilters={columnFilters}
           setColumnFilters={setColumnFilters}
           columns={columns}
+          sorting={sorting}
+          setSorting={setSorting}
         />
 
         <div className="flex">

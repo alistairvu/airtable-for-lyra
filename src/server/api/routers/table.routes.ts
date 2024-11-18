@@ -45,6 +45,7 @@ export const tableRouter = createTRPCRouter({
         tableId: z.string(),
         cursor: z.number().nullish(),
         limit: z.number().nullish(),
+        viewId: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -58,6 +59,7 @@ export const tableRouter = createTRPCRouter({
         cursor,
         limit,
         ctx.session.user.id,
+        input.viewId,
       );
     }),
 

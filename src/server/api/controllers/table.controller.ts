@@ -1,4 +1,5 @@
 import { type PrismaClient } from "@prisma/client";
+import { type SortingState } from "@tanstack/react-table";
 import { TRPCError } from "@trpc/server";
 
 /**
@@ -80,8 +81,81 @@ export class TableController {
     cursor: number,
     limit: number,
     userId: string,
+    viewId?: string,
   ) {
     await this.findBase(tableId, userId);
+
+    // Handling different viewId
+    if (viewId) {
+      const view = await this.db.view.findUnique({
+        where: {
+          id: viewId,
+        },
+      });
+
+      // First thing
+      if (view !== undefined) {
+        // Has sorting state
+        if (view?.sorting) {
+          const parsedSorting = view.sorting as unknown as SortingState;
+
+          // One column at a time
+          const sortingObject = parsedSorting[0];
+
+          console.log({ sortingObject });
+
+          if (sortingObject !== undefined) {
+            const { id, desc } = sortingObject;
+
+            const column = await this.db.column.findUnique({
+              where: {
+                id,
+              },
+            });
+
+            const isText = column?.type === "TEXT";
+
+            const rowIds = await this.db.cell.findMany({
+              take: limit,
+              skip: cursor,
+              where: {
+                columnId: id,
+              },
+              select: {
+                rowId: true,
+              },
+              orderBy: isText
+                ? { textValue: desc ? "desc" : "asc" }
+                : { intValue: desc ? "desc" : "asc" },
+            });
+
+            const extractedId = rowIds.map((x) => x.rowId);
+            const idMap = new Map(extractedId.map((x, index) => [x, index]));
+
+            const rawItems = await this.db.row.findMany({
+              where: {
+                id: {
+                  in: extractedId,
+                },
+              },
+              include: {
+                cells: true,
+              },
+            });
+
+            const items = rawItems.sort(
+              (x, y) => (idMap.get(x.id) ?? -1) - (idMap.get(y.id) ?? -1),
+            );
+
+            console.log({ items });
+
+            const nextCursor = cursor + items.length;
+
+            return { items, nextCursor };
+          }
+        }
+      }
+    }
 
     const items = await this.db.row.findMany({
       take: limit,

@@ -3,7 +3,10 @@
 import { type Dispatch, type SetStateAction } from "react";
 import { BaseTableFilter } from "./base-table-filter";
 import { BaseTableSearch } from "./base-table-search";
-import { type ColumnFiltersState } from "@tanstack/react-table";
+import {
+  type SortingState,
+  type ColumnFiltersState,
+} from "@tanstack/react-table";
 import { type Column } from "@prisma/client";
 import { Button } from "../ui/button";
 import {
@@ -20,6 +23,7 @@ import { RowHeightIcon } from "../icons/row-height-icon";
 import { Separator } from "../ui/separator";
 import { UsersThreeIcon } from "../icons/users-three-icon";
 import { useTableSidebar } from "~/hooks/use-table-sidebar";
+import { BaseTableSort } from "./base-table-sort";
 
 type BaseTableActionsProps = {
   columns: Column[];
@@ -31,11 +35,16 @@ type BaseTableActionsProps = {
 
   columnFilters: ColumnFiltersState;
   setColumnFilters: Dispatch<SetStateAction<ColumnFiltersState>>;
+
+  sorting: SortingState;
+  setSorting: Dispatch<SetStateAction<SortingState>>;
 };
 
 export const BaseTableActions = (props: BaseTableActionsProps) => {
   const { isSearching, setIsSearching, query, setQuery } = props;
   const { columns, columnFilters, setColumnFilters } = props;
+  const { sorting, setSorting } = props;
+
   const { setIsOpen } = useTableSidebar();
 
   return (
@@ -78,9 +87,11 @@ export const BaseTableActions = (props: BaseTableActionsProps) => {
           <GroupIcon /> <span className="hidden md:block">Group</span>
         </Button>
 
-        <Button variant="ghost" size="sm" className="px-2 py-1">
-          <ArrowUpDown /> <span className="hidden md:block">Sort</span>
-        </Button>
+        <BaseTableSort
+          sorting={sorting}
+          setSorting={setSorting}
+          columns={columns}
+        />
 
         <Button variant="ghost" size="sm" className="px-2 py-1">
           <PaintBucket /> <span className="hidden md:block">Color</span>
