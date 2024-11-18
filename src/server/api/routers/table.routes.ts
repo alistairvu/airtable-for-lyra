@@ -26,6 +26,28 @@ export const tableRouter = createTRPCRouter({
       return row;
     }),
 
+  addDummyRows: protectedProcedure
+    .input(
+      z.object({
+        tableId: z.string(),
+        dummyRows: z.array(
+          z.object({
+            name: z.string(),
+            age: z.number(),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const controller = new TableController(ctx.db);
+      const rows = await controller.addDummyRows(
+        input.tableId,
+        ctx.session.user.id,
+        input.dummyRows,
+      );
+      return rows;
+    }),
+
   addTextColumn: protectedProcedure
     .input(
       z.object({

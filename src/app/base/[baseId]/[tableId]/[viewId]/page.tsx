@@ -25,7 +25,7 @@ export default async function TablePage({
     <BaseTable
       tableId={tableId}
       initialColumns={columns}
-      rowCount={rowCount}
+      initialRowCount={rowCount}
       viewId={viewId}
       initialSorting={(view?.sorting ?? ([] as unknown)) as SortingState}
     />

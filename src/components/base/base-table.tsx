@@ -10,7 +10,6 @@ import {
   getSortedRowModel,
   type ColumnFiltersState,
   getFilteredRowModel,
-  ColumnSort,
   type OnChangeFn,
 } from "@tanstack/react-table";
 import { type Column } from "@prisma/client";
@@ -44,13 +43,15 @@ import { BaseSidebar } from "./base-sidebar";
 import { TableSidebarContext } from "~/hooks/use-table-sidebar";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
+import { useAddDummyRows } from "~/hooks/use-add-dummy-rows";
+import { faker } from "@faker-js/faker";
 
 type BaseTableProps = {
   tableId: string;
   viewId: string;
   initialColumns: Column[];
   initialSorting: SortingState;
-  rowCount: number;
+  initialRowCount: number;
 };
 
 declare module "@tanstack/react-table" {
@@ -70,7 +71,7 @@ export const BaseTable = ({
   tableId,
   viewId,
   initialColumns,
-  rowCount,
+  initialRowCount,
   initialSorting,
 }: BaseTableProps) => {
   const FETCH_LIMIT = 1000;
@@ -91,6 +92,12 @@ export const BaseTable = ({
   const [query, setQuery] = useState("");
 
   // Loading in data
+  const rowCountQuery = api.table.countRows.useQuery(tableId, {
+    initialData: { count: initialRowCount },
+  });
+
+  const { count: rowCount } = rowCountQuery.data;
+
   const { data: columns } = api.table.getColumns.useQuery(tableId, {
     initialData: initialColumns,
   });
@@ -120,6 +127,27 @@ export const BaseTable = ({
 
   // SECTION: Mutations for adding a new row
   const addRow = useAddRow({ tableId, columns, rowCount, limit: FETCH_LIMIT });
+
+  // SECTION: Mutations for adding a dummy row
+  const addDummyRows = useAddDummyRows({
+    tableId,
+    columns,
+    rowCount,
+    limit: FETCH_LIMIT,
+  });
+
+  const generateDummyRows = (count = 5000) => {
+    const dummyRows = [];
+
+    for (let i = 0; i < count; i++) {
+      dummyRows.push({
+        name: faker.person.fullName(),
+        age: Math.floor(Math.random() * 100),
+      });
+    }
+
+    return dummyRows;
+  };
 
   // SECTION: Mutations for adding a new text column
   const addTextColumn = useAddTextColumn(tableId);
@@ -422,7 +450,7 @@ export const BaseTable = ({
               <TableBody
                 style={{
                   display: "grid",
-                  height: `${rowVirtualizer.getTotalSize() + 64}px`, //tells scrollbar how big the table is
+                  height: `${rowVirtualizer.getTotalSize() + 96}px`, //tells scrollbar how big the table is
                   position: "relative",
                 }}
               >
@@ -479,6 +507,46 @@ export const BaseTable = ({
                   >
                     <TableCell className="flex h-8 w-12 items-center justify-center border-b text-center text-slate-400">
                       <PlusIcon className="h-4 w-4" />
+                    </TableCell>
+
+                    {footerGroup.headers.map((column, index) => {
+                      return (
+                        <TableCell
+                          key={column.id}
+                          className={cn(
+                            index + 1 === columns.length
+                              ? "border-r"
+                              : "border-x-0",
+                            "border-b",
+                          )}
+                          style={{
+                            display: "flex",
+                            width: column.getSize() * 1.5,
+                          }}
+                        />
+                      );
+                    })}
+                  </TableRow>
+                ))}
+
+                {table.getFooterGroups().map((footerGroup, index) => (
+                  <TableRow
+                    key={footerGroup.id}
+                    onClick={() =>
+                      addDummyRows.mutate({
+                        tableId,
+                        dummyRows: generateDummyRows(5000),
+                      })
+                    }
+                    className="h-8 cursor-pointer"
+                    style={{
+                      display: "flex",
+                      position: "absolute",
+                      transform: `translateY(${rowVirtualizer.getTotalSize() + (index + 1) * 32}px)`,
+                    }}
+                  >
+                    <TableCell className="flex h-8 w-12 items-center justify-center border-b text-center text-slate-400">
+                      <PlusIcon className="h-4 w-4" /> 5k
                     </TableCell>
 
                     {footerGroup.headers.map((column, index) => {

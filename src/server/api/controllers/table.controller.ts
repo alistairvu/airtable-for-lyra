@@ -2,6 +2,11 @@ import { type PrismaClient } from "@prisma/client";
 import { type SortingState } from "@tanstack/react-table";
 import { TRPCError } from "@trpc/server";
 
+type AddDummyParams = {
+  name: string;
+  age: number;
+};
+
 /**
  * Handles logic related to the table
  */
@@ -115,6 +120,7 @@ export class TableController {
 
             const isText = column?.type === "TEXT";
 
+            // Getting the rows we can render
             const rowIds = await this.db.cell.findMany({
               take: limit,
               skip: cursor,
@@ -129,9 +135,11 @@ export class TableController {
                 : { intValue: desc ? "desc" : "asc" },
             });
 
+            // Extracting their IDs
             const extractedId = rowIds.map((x) => x.rowId);
             const idMap = new Map(extractedId.map((x, index) => [x, index]));
 
+            // Only getting the elements
             const rawItems = await this.db.row.findMany({
               where: {
                 id: {
@@ -147,8 +155,6 @@ export class TableController {
               (x, y) => (idMap.get(x.id) ?? -1) - (idMap.get(y.id) ?? -1),
             );
 
-            console.log({ items });
-
             const nextCursor = cursor + items.length;
 
             return { items, nextCursor };
@@ -157,6 +163,7 @@ export class TableController {
       }
     }
 
+    // No custom views.
     const items = await this.db.row.findMany({
       take: limit,
       skip: cursor,
@@ -360,5 +367,99 @@ export class TableController {
     console.log({ newRow });
 
     return newRow;
+  }
+
+  /**
+   * Add dummy rows to the database
+   *
+   * @param tableId
+   * @param userId
+   * @param dummyRows
+   * @returns
+   */
+  async addDummyRows(
+    tableId: string,
+    userId: string,
+    dummyRows: AddDummyParams[],
+  ) {
+    await this.findBase(tableId, userId);
+
+    // Finds column data
+    const columns = await this.db.column.findMany({
+      where: {
+        tableId,
+      },
+    });
+
+    const nameColumn = columns.find((x) => x.name === "Name");
+    const ageColumn = columns.find((x) => x.name === "Age");
+
+    if (nameColumn === undefined || ageColumn === undefined) {
+      return null;
+    }
+
+    const rowIndex = await this.db.row.aggregate({
+      where: {
+        tableId: tableId,
+      },
+      _max: {
+        index: true,
+      },
+    });
+
+    const maxIndex = rowIndex._max;
+
+    const rowData = dummyRows.map((_values, index) => ({
+      index: (maxIndex.index ?? 0) + index + 1,
+      tableId,
+    }));
+
+    const rows = await this.db.row.createManyAndReturn({
+      data: rowData,
+    });
+
+    const cellData = rows.flatMap((row, index) => {
+      return columns.map((column) => {
+        const { name, age } = dummyRows[index]!;
+
+        if (column.name === "Name") {
+          return {
+            rowId: row.id,
+            columnId: column.id,
+            intValue: null,
+            textValue: name,
+          };
+        }
+
+        if (column.name === "Age") {
+          return {
+            rowId: row.id,
+
+            columnId: column.id,
+            intValue: age,
+            textValue: String(age),
+          };
+        }
+
+        return column.type === "NUMBER"
+          ? {
+              rowId: row.id,
+
+              columnId: column.id,
+              intValue: 0,
+              textValue: null,
+            }
+          : {
+              rowId: row.id,
+              columnId: column.id,
+              intValue: null,
+              textValue: "",
+            };
+      });
+    });
+
+    await this.db.cell.createMany({
+      data: cellData,
+    });
   }
 }
