@@ -48,7 +48,7 @@ export const BaseSidebar = () => {
         </div>
 
         {/** Views */}
-        <div className="flex grow flex-col gap-1 overflow-y-scroll pb-3 pt-2">
+        <div className="flex grow flex-col gap-0 overflow-y-scroll pb-3 pt-2">
           <div className="flex cursor-pointer items-center justify-between rounded-md bg-blue-100 px-2 pb-2 pt-2">
             <div className="flex items-center gap-1">
               <GridFeatureIcon className="fill-blue-600" /> Grid view
@@ -120,7 +120,10 @@ export const BaseSidebar = () => {
             <Button variant="ghost" className="h-[32px]">
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-2 text-[13px]">
-                  <ChartNoAxesGantt className="stroke-red-600" /> Timeline
+                  <ChartNoAxesGantt className="stroke-red-600" /> Timeline{" "}
+                  <span className="h-[18px] rounded-full bg-blue-200 px-2 text-[11px] text-blue-700">
+                    Team
+                  </span>
                 </div>
 
                 <PlusIcon className="h-4 w-4" />
@@ -140,7 +143,10 @@ export const BaseSidebar = () => {
             <Button variant="ghost" className="h-[32px]">
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-2 text-[13px]">
-                  <GanttIcon className="fill-green-600" /> Gantt
+                  <GanttIcon className="fill-green-600" /> Gantt{" "}
+                  <span className="h-[18px] rounded-full bg-blue-200 px-2 text-[11px] text-blue-700">
+                    Team
+                  </span>
                 </div>
 
                 <PlusIcon className="h-4 w-4" />
@@ -150,7 +156,10 @@ export const BaseSidebar = () => {
             <Button variant="ghost" className="h-[32px]">
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-2 text-[13px]">
-                  New section
+                  New section{" "}
+                  <span className="h-[18px] rounded-full bg-blue-200 px-2 text-[11px] text-blue-700">
+                    Team
+                  </span>
                 </div>
 
                 <PlusIcon className="h-4 w-4" />

@@ -19,7 +19,6 @@ import { GroupIcon } from "../icons/group-icon";
 import { RowHeightIcon } from "../icons/row-height-icon";
 import { Separator } from "../ui/separator";
 import { UsersThreeIcon } from "../icons/users-three-icon";
-import { SidebarTrigger, useSidebar } from "../ui/sidebar";
 import { useTableSidebar } from "~/hooks/use-table-sidebar";
 
 type BaseTableActionsProps = {
