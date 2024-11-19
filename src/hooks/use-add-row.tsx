@@ -93,6 +93,7 @@ export const useAddRow = ({
     },
 
     onSettled: async () => {
+      await utils.table.countRows.invalidate(tableId);
       await utils.table.getInfiniteRows.invalidate({ tableId, limit });
     },
   });
