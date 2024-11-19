@@ -166,7 +166,7 @@ export const BaseTable = ({
       queryClient.removeQueries({
         queryKey: getQueryKey(
           api.table.getInfiniteRows,
-          { tableId, limit: FETCH_LIMIT },
+          { tableId, limit: FETCH_LIMIT, viewId },
           "infinite",
         ),
       });
@@ -176,6 +176,7 @@ export const BaseTable = ({
       await utils.table.getInfiniteRows.invalidate({
         tableId,
         limit: FETCH_LIMIT,
+        viewId,
       });
     },
   });
@@ -579,9 +580,11 @@ export const BaseTable = ({
               </TableBody>
             </Table>
 
-            <div className="sticky bottom-0 left-0 z-20 flex h-[24px] w-full items-center justify-start border-t bg-slate-100 pl-2 text-[11px]">
+            <div
+              className={`fixed bottom-0 ${sidebarOpen ? "left-[282px]" : "left-0"} z-20 flex h-[24px] w-full items-center justify-start border-t bg-slate-100 pl-2 text-[11px]`}
+            >
               <span>
-                {rows.length} {rows.length !== 1 ? "rows" : "row"}
+                {rowCount} {rowCount !== 1 ? "rows" : "row"}
               </span>
             </div>
           </div>

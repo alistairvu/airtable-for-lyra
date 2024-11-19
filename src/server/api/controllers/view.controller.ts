@@ -155,6 +155,13 @@ export class ViewController {
     });
   }
 
+  /**
+   * Set the sorting state of a given view.
+   *
+   * @param viewId
+   * @param userId
+   * @param sorting
+   */
   async setSortState(
     viewId: string,
     userId: string,
