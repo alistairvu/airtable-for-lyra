@@ -1,4 +1,7 @@
-import { type SortingState } from "@tanstack/react-table";
+import {
+  type ColumnFiltersState,
+  type SortingState,
+} from "@tanstack/react-table";
 import { BaseTable } from "~/components/base/base-table";
 import { api } from "~/trpc/server";
 
@@ -28,6 +31,9 @@ export default async function TablePage({
       initialRowCount={rowCount}
       viewId={viewId}
       initialSorting={(view?.sorting ?? ([] as unknown)) as SortingState}
+      initialColumnFilters={
+        (view?.columnFilters ?? ([] as unknown)) as ColumnFiltersState
+      }
     />
   );
 }

@@ -68,4 +68,20 @@ export const viewRouter = createTRPCRouter({
         input.sorting as Prisma.JsonArray,
       );
     }),
+
+  setColumnFilters: protectedProcedure
+    .input(
+      z.object({
+        viewId: z.string(),
+        columnFilters: z.any(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const controller = new ViewController(ctx.db);
+      return controller.setColumnFilters(
+        input.viewId,
+        ctx.session.user.id,
+        input.columnFilters as Prisma.JsonArray,
+      );
+    }),
 });

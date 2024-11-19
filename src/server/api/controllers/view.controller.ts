@@ -1,5 +1,4 @@
 import { type Prisma, type PrismaClient } from "@prisma/client";
-import { SortingState } from "@tanstack/react-table";
 import { TRPCError } from "@trpc/server";
 
 /**
@@ -175,6 +174,30 @@ export class ViewController {
       },
       data: {
         sorting,
+      },
+    });
+  }
+
+  /**
+   * Set column filters of a given view.
+   *
+   * @param viewId
+   * @param userId
+   * @param columnFilters
+   */
+  async setColumnFilters(
+    viewId: string,
+    userId: string,
+    columnFilters: Prisma.JsonArray,
+  ) {
+    await this.findBaseByView(viewId, userId);
+
+    await this.db.view.update({
+      where: {
+        id: viewId,
+      },
+      data: {
+        columnFilters,
       },
     });
   }

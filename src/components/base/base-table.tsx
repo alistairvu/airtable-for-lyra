@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   type ColumnFiltersState,
   getFilteredRowModel,
-  type OnChangeFn,
+  functionalUpdate,
 } from "@tanstack/react-table";
 import { type Column } from "@prisma/client";
 import { type IntFilter, type RowWithCells } from "~/@types";
@@ -45,13 +45,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { useAddDummyRows } from "~/hooks/use-add-dummy-rows";
 import { faker } from "@faker-js/faker";
-import { F } from "node_modules/@faker-js/faker/dist/airline-BLb3y-7w";
 
 type BaseTableProps = {
   tableId: string;
   viewId: string;
   initialColumns: Column[];
   initialSorting: SortingState;
+  initialColumnFilters: ColumnFiltersState;
   initialRowCount: number;
 };
 
@@ -74,6 +74,7 @@ export const BaseTable = ({
   initialColumns,
   initialRowCount,
   initialSorting,
+  initialColumnFilters,
 }: BaseTableProps) => {
   const FETCH_LIMIT = 1000;
   const utils = api.useUtils();
@@ -86,7 +87,8 @@ export const BaseTable = ({
   const [sorting, setSorting] = useState<SortingState>(initialSorting);
 
   // SECTION: Filter state
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnFilters, setColumnFilters] =
+    useState<ColumnFiltersState>(initialColumnFilters);
 
   // SECTION: State related to search
   const [isSearching, setIsSearching] = useState(false);
@@ -181,17 +183,25 @@ export const BaseTable = ({
     },
   });
 
-  const handleSortingUpdate: OnChangeFn<SortingState> = (updater) => {
-    setSorting(updater);
-  };
-
-  useEffect(() => {
-    setViewSorting.mutate({
-      viewId,
-      sorting,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sorting]);
+  // SECTION: Mutation for saving the sorting view
+  const setViewColumnFilters = api.view.setColumnFilters.useMutation({
+    // onMutate: () => {
+    //   queryClient.removeQueries({
+    //     queryKey: getQueryKey(
+    //       api.table.getInfiniteRows,
+    //       { tableId, limit: FETCH_LIMIT, viewId },
+    //       "infinite",
+    //     ),
+    //   });
+    // },
+    // onSettled: async () => {
+    //   await utils.table.getInfiniteRows.invalidate({
+    //     tableId,
+    //     limit: FETCH_LIMIT,
+    //     viewId,
+    //   });
+    // },
+  });
 
   // Column definitions
   const columnDef: ColumnDef<RowWithCells, string | number>[] = columns.map(
@@ -273,10 +283,24 @@ export const BaseTable = ({
     getCoreRowModel: getCoreRowModel(),
     columnResizeMode: "onChange",
 
-    onSortingChange: handleSortingUpdate,
+    onSortingChange: (updater) => {
+      const newSorting = functionalUpdate(updater, sorting);
+      setSorting(updater);
+      setViewSorting.mutate({
+        viewId,
+        sorting: newSorting,
+      });
+    },
     getSortedRowModel: getSortedRowModel(),
 
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: (updater) => {
+      const newFilters = functionalUpdate(updater, columnFilters);
+      setColumnFilters(updater);
+      setViewColumnFilters.mutate({
+        viewId,
+        columnFilters: newFilters,
+      });
+    },
     getFilteredRowModel: getFilteredRowModel(),
 
     manualSorting: true,
@@ -445,7 +469,7 @@ export const BaseTable = ({
                       );
                     })}
                     <TableHead
-                      className="h-8 w-[94px] cursor-pointer bg-[#f5f5f5] hover:bg-slate-200"
+                      className="h-8 w-[94px] cursor-pointer border-b border-r bg-[#f5f5f5] hover:bg-slate-200"
                       onClick={() => addTextColumn.mutate({ tableId })}
                     >
                       <div className="flex h-8 items-center justify-center">
