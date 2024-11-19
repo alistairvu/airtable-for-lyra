@@ -72,6 +72,14 @@ export const useAddDummyRows = ({
           }),
         }));
 
+      utils.table.countRows.setData(tableId, (data) =>
+        data
+          ? {
+              count: data.count + 5000,
+            }
+          : undefined,
+      );
+
       // Optimistically update
       utils.table.getInfiniteRows.setInfiniteData(
         { tableId, limit },

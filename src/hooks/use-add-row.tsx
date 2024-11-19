@@ -44,6 +44,14 @@ export const useAddRow = ({
         })),
       };
 
+      utils.table.countRows.setData(tableId, (data) =>
+        data
+          ? {
+              count: data.count + 1,
+            }
+          : undefined,
+      );
+
       // Optimistically update
       utils.table.getInfiniteRows.setInfiniteData(
         { tableId, limit },
