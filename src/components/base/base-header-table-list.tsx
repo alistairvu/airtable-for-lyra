@@ -18,14 +18,6 @@ export const BaseHeaderTableList = ({ base }: BaseHeaderTableProps) => {
 
   const params = useParams<{ baseId: string; tableId?: string }>();
 
-  const isSelected = (tableId: string, tableIndex: number) => {
-    if (params.tableId === undefined) {
-      return tableIndex === 0;
-    }
-
-    return tableId === params.tableId;
-  };
-
   // TO TRY: redirect to a new /new page that triggers the mutation
   const { data: tables } = api.base.getAllTables.useQuery(
     {
@@ -35,6 +27,18 @@ export const BaseHeaderTableList = ({ base }: BaseHeaderTableProps) => {
       initialData: base.tables,
     },
   );
+
+  const isSelected = (tableIndex: number) => {
+    if (params.tableId === undefined) {
+      return tableIndex === 0;
+    }
+
+    if (tables[tableIndex] === undefined) {
+      return false;
+    }
+
+    return tables[tableIndex].id === params.tableId;
+  };
 
   const addTableMutation = api.base.createTable.useMutation({
     onSuccess: async (data, _variables, _context) => {
@@ -50,26 +54,42 @@ export const BaseHeaderTableList = ({ base }: BaseHeaderTableProps) => {
           <div className="ml-[-0.25rem] flex flex-auto overflow-auto rounded-tr-lg bg-rose-700 pl-1">
             <nav className="flex flex-none text-[13px]" aria-label="Tables">
               {tables.map((table, index) =>
-                isSelected(table.id, index) ? (
-                  <div
-                    key={table.id}
-                    className="height-full flex flex-auto cursor-pointer items-center rounded-t bg-white p-1 px-3 font-medium text-black"
-                  >
-                    {table.name} <ChevronDown className="ml-1 h-4 w-4" />
+                isSelected(index) ? (
+                  <div key={table.id} className="flex">
+                    <div className="height-full flex flex-auto cursor-pointer items-center rounded-t bg-white p-1 px-3 font-medium text-black">
+                      {table.name} <ChevronDown className="ml-1 h-4 w-4" />
+                    </div>
                   </div>
                 ) : (
                   <Link
                     key={table.id}
                     href={`/base/${base.id}/${table.id}`}
+                    className="flex h-full items-center justify-center hover:bg-rose-800"
                     prefetch
                   >
-                    <div className="height-full flex flex-auto cursor-pointer items-center rounded-t border border-rose-800 p-1 px-3 text-white hover:bg-rose-700">
+                    <div className="height-full flex flex-auto cursor-pointer items-center rounded-t p-1 px-3 text-white">
                       {table.name}
                     </div>
+                    {!isSelected(index + 1) && (
+                      <div className="h-[12px] w-[1px] bg-rose-300/50" />
+                    )}
                   </Link>
                 ),
               )}
             </nav>
+
+            <div className="flex items-center justify-center">
+              <button
+                className="h-[32px] w-[40px] rounded-t text-center hover:bg-rose-800"
+                aria-label="Add or import table"
+              >
+                <div className="flex items-center justify-center">
+                  <ChevronDown className="h-4 w-4" />
+                </div>
+              </button>
+
+              <div className="h-[12px] w-[1px] bg-rose-300/50" />
+            </div>
 
             <button
               className="h-[32px] w-[40px] rounded-t text-center hover:bg-rose-800"

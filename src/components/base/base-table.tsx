@@ -206,75 +206,77 @@ export const BaseTable = ({
   });
 
   // Column definitions
-  const columnDef: ColumnDef<RowWithCells, string | number>[] = columns.map(
-    (col) => ({
-      id: col.id,
-      name: col.name,
-      filterFn:
-        col.type === "NUMBER"
-          ? (row, columnId, filterValue) => {
-              const cell = row
-                .getAllCells()
-                .find((cell) => cell.column.id === columnId);
+  const columnDef: ColumnDef<RowWithCells, string | number>[] = useMemo(
+    () =>
+      columns.map((col) => ({
+        id: col.id,
+        name: col.name,
+        filterFn:
+          col.type === "NUMBER"
+            ? (row, columnId, filterValue) => {
+                const cell = row
+                  .getAllCells()
+                  .find((cell) => cell.column.id === columnId);
 
-              if (cell && typeof cell.getValue() === "number") {
-                const { mode, value } = filterValue as IntFilter;
+                if (cell && typeof cell.getValue() === "number") {
+                  const { mode, value } = filterValue as IntFilter;
 
-                if (value === null) {
+                  if (value === null) {
+                    return true;
+                  }
+
+                  if (mode == "gt") {
+                    return value < (cell.getValue() as number);
+                  }
+
+                  if (mode == "lt") {
+                    return value > (cell.getValue() as number);
+                  }
+
                   return true;
                 }
 
-                if (mode == "gt") {
-                  return value < (cell.getValue() as number);
+                return false;
+              }
+            : (row, columnId, filterValue) => {
+                const cell = row
+                  .getAllCells()
+                  .find((cell) => cell.column.id === columnId);
+
+                if (cell) {
+                  return filterValue
+                    ? cell.getValue() === ""
+                    : cell.getValue() !== "";
                 }
 
-                if (mode == "lt") {
-                  return value > (cell.getValue() as number);
-                }
+                return false;
+              },
 
-                return true;
-              }
+        accessorFn: (row: RowWithCells) => {
+          const cell = row.cells.find((cell) => cell.columnId === col.id);
 
-              return false;
-            }
-          : (row, columnId, filterValue) => {
-              const cell = row
-                .getAllCells()
-                .find((cell) => cell.column.id === columnId);
+          if (col.type === "NUMBER") {
+            return cell?.intValue ?? 0;
+          }
 
-              if (cell) {
-                return filterValue
-                  ? cell.getValue() === ""
-                  : cell.getValue() !== "";
-              }
+          return cell?.textValue ?? "";
+        },
 
-              return false;
-            },
+        header: ({ column }) => (
+          <BaseTableHeader
+            column={column}
+            name={col.name}
+            isNumber={col.type === "NUMBER"}
+          />
+        ),
 
-      accessorFn: (row: RowWithCells) => {
-        const cell = row.cells.find((cell) => cell.columnId === col.id);
+        footer: (props) => props.column.id,
 
-        if (col.type === "NUMBER") {
-          return cell?.intValue ?? 0;
-        }
-
-        return cell?.textValue ?? "";
-      },
-
-      header: ({ column }) => (
-        <BaseTableHeader
-          column={column}
-          name={col.name}
-          isNumber={col.type === "NUMBER"}
-        />
-      ),
-
-      footer: (props) => props.column.id,
-
-      cell: (props) => (
-        <BaseTableCell {...props} query={query} isSearching={isSearching} />
-      ),
-    }),
+        cell: (props) => (
+          <BaseTableCell {...props} query={query} isSearching={isSearching} />
+        ),
+      })),
+    [columns, query, isSearching],
   );
 
   // Actual table hook
