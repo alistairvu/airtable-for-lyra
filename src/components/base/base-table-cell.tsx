@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { TableInput } from "../ui/table-input";
 import { type CellContext } from "@tanstack/react-table";
 import { type RowWithCells } from "~/@types";
@@ -20,9 +20,9 @@ export const BaseTableCell = ({
   const initialValue = getValue();
   const [value, setValue] = useState(initialValue ?? "");
 
-  useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
+  // useEffect(() => {
+  //   setValue(initialValue);
+  // }, [initialValue]);
 
   const handleBlur = () => {
     if (typeof initialValue === "number" && typeof value === "number") {

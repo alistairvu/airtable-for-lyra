@@ -6,6 +6,7 @@ type UseAddDummyRowParams = {
   columns: Column[];
   rowCount: number;
   limit: number;
+  viewId: string;
 };
 
 export const useAddDummyRows = ({
@@ -13,6 +14,7 @@ export const useAddDummyRows = ({
   columns,
   rowCount,
   limit,
+  viewId,
 }: UseAddDummyRowParams) => {
   const utils = api.useUtils();
 
@@ -25,6 +27,7 @@ export const useAddDummyRows = ({
       const previousRows = utils.table.getInfiniteRows.getInfiniteData({
         tableId,
         limit,
+        viewId,
       });
 
       const emptyNewRows = dummyRows
@@ -82,7 +85,7 @@ export const useAddDummyRows = ({
 
       // Optimistically update
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit },
+        { tableId, limit, viewId },
         (data) => {
           if (!data) {
             return {
@@ -120,7 +123,7 @@ export const useAddDummyRows = ({
 
     onSettled: async () => {
       await utils.table.countRows.invalidate(tableId);
-      await utils.table.getInfiniteRows.invalidate({ tableId, limit });
+      await utils.table.getInfiniteRows.invalidate({ tableId, limit, viewId });
     },
   });
 

@@ -6,6 +6,7 @@ type UseAddRowParams = {
   columns: Column[];
   rowCount: number;
   limit: number;
+  viewId: string;
 };
 
 export const useAddRow = ({
@@ -13,6 +14,7 @@ export const useAddRow = ({
   columns,
   rowCount,
   limit,
+  viewId,
 }: UseAddRowParams) => {
   const utils = api.useUtils();
 
@@ -25,6 +27,7 @@ export const useAddRow = ({
       const previousRows = utils.table.getInfiniteRows.getInfiniteData({
         tableId,
         limit,
+        viewId,
       });
 
       const emptyNewRow = {
@@ -54,7 +57,7 @@ export const useAddRow = ({
 
       // Optimistically update
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit },
+        { tableId, limit, viewId },
         (data) => {
           if (!data) {
             return {
@@ -84,7 +87,7 @@ export const useAddRow = ({
 
     onError: (_err, _newRow, context) => {
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit },
+        { tableId, limit, viewId },
         context?.previousRows ?? {
           pages: [],
           pageParams: [],
@@ -94,7 +97,7 @@ export const useAddRow = ({
 
     onSettled: async () => {
       await utils.table.countRows.invalidate(tableId);
-      await utils.table.getInfiniteRows.invalidate({ tableId, limit });
+      await utils.table.getInfiniteRows.invalidate({ tableId, limit, viewId });
     },
   });
 

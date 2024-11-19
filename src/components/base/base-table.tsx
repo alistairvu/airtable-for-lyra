@@ -45,6 +45,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { useAddDummyRows } from "~/hooks/use-add-dummy-rows";
 import { faker } from "@faker-js/faker";
+import { F } from "node_modules/@faker-js/faker/dist/airline-BLb3y-7w";
 
 type BaseTableProps = {
   tableId: string;
@@ -120,13 +121,19 @@ export const BaseTable = ({
   const totalFetched = rows.length;
 
   // SECTION: Mutations for editing a text cell
-  const editTextCell = useEditTextCell(tableId);
+  const editTextCell = useEditTextCell(tableId, viewId, FETCH_LIMIT);
 
   // SECTION: Mutations for editing a text cell
-  const editIntCell = useEditIntCell(tableId);
+  const editIntCell = useEditIntCell(tableId, viewId, FETCH_LIMIT);
 
   // SECTION: Mutations for adding a new row
-  const addRow = useAddRow({ tableId, columns, rowCount, limit: FETCH_LIMIT });
+  const addRow = useAddRow({
+    tableId,
+    columns,
+    rowCount,
+    limit: FETCH_LIMIT,
+    viewId,
+  });
 
   // SECTION: Mutations for adding a dummy row
   const addDummyRows = useAddDummyRows({
@@ -134,6 +141,7 @@ export const BaseTable = ({
     columns,
     rowCount,
     limit: FETCH_LIMIT,
+    viewId,
   });
 
   const generateDummyRows = (count = 5000) => {
@@ -150,7 +158,7 @@ export const BaseTable = ({
   };
 
   // SECTION: Mutations for adding a new text column
-  const addTextColumn = useAddTextColumn(tableId);
+  const addTextColumn = useAddTextColumn(tableId, viewId, FETCH_LIMIT);
 
   // SECTION: Mutation for editing the cell state
   const setViewSorting = api.view.setSortState.useMutation({
@@ -450,7 +458,7 @@ export const BaseTable = ({
               <TableBody
                 style={{
                   display: "grid",
-                  height: `${rowVirtualizer.getTotalSize() + 96}px`, //tells scrollbar how big the table is
+                  height: `${rowVirtualizer.getTotalSize() + 32 * 5}px`, //tells scrollbar how big the table is
                   position: "relative",
                 }}
               >
@@ -570,6 +578,12 @@ export const BaseTable = ({
                 ))}
               </TableBody>
             </Table>
+
+            <div className="sticky bottom-0 left-0 z-20 flex h-[24px] w-full items-center justify-start border-t bg-slate-100 pl-2 text-[11px]">
+              <span>
+                {rows.length} {rows.length !== 1 ? "rows" : "row"}
+              </span>
+            </div>
           </div>
         </div>
       </div>

@@ -7,7 +7,11 @@ import { api } from "~/trpc/react";
  * @param tableId
  * @returns
  */
-export const useAddTextColumn = (tableId: string, limit = 1000) => {
+export const useAddTextColumn = (
+  tableId: string,
+  viewId: string,
+  limit = 1000,
+) => {
   const utils = api.useUtils();
 
   // SECTION: Mutations for adding a new  text column
@@ -22,6 +26,7 @@ export const useAddTextColumn = (tableId: string, limit = 1000) => {
       const previousRows = utils.table.getInfiniteRows.getInfiniteData({
         tableId,
         limit,
+        viewId,
       });
 
       // Empty column
@@ -46,7 +51,7 @@ export const useAddTextColumn = (tableId: string, limit = 1000) => {
 
       // Optimistically update the cells
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit },
+        { tableId, limit, viewId },
         (data) => {
           if (!data) {
             return {
@@ -92,7 +97,7 @@ export const useAddTextColumn = (tableId: string, limit = 1000) => {
     onError: (_err, _newRow, context) => {
       utils.table.getColumns.setData(tableId, context?.previousColumns ?? []);
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit },
+        { tableId, limit, viewId },
         context?.previousRows ?? {
           pages: [],
           pageParams: [],
@@ -102,7 +107,7 @@ export const useAddTextColumn = (tableId: string, limit = 1000) => {
 
     onSettled: async () => {
       await utils.table.getColumns.invalidate(tableId);
-      await utils.table.getInfiniteRows.invalidate({ tableId, limit });
+      await utils.table.getInfiniteRows.invalidate({ tableId, limit, viewId });
     },
   });
 
