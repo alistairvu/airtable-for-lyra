@@ -12,7 +12,7 @@ import {
   getFilteredRowModel,
   functionalUpdate,
 } from "@tanstack/react-table";
-import { type Column } from "@prisma/client";
+import { type View, type Column } from "@prisma/client";
 import { type IntFilter, type RowWithCells } from "~/@types";
 import {
   Table,
@@ -53,6 +53,7 @@ type BaseTableProps = {
   initialSorting: SortingState;
   initialColumnFilters: ColumnFiltersState;
   initialRowCount: number;
+  initialViews: View[];
 };
 
 declare module "@tanstack/react-table" {
@@ -75,13 +76,14 @@ export const BaseTable = ({
   initialRowCount,
   initialSorting,
   initialColumnFilters,
+  initialViews,
 }: BaseTableProps) => {
   const FETCH_LIMIT = 250;
   const utils = api.useUtils();
   const queryClient = useQueryClient();
 
   // SECTION: Sidebar open state
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // SECTION: Sorting state
   const [sorting, setSorting] = useState<SortingState>(initialSorting);
@@ -409,7 +411,11 @@ export const BaseTable = ({
         />
 
         <div className="flex">
-          <BaseSidebar />
+          <BaseSidebar
+            initialViews={initialViews}
+            tableId={tableId}
+            viewId={viewId}
+          />
 
           <div
             ref={tableContainerRef}

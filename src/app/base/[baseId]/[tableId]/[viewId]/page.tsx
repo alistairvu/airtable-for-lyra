@@ -20,9 +20,13 @@ export default async function TablePage({
   const viewId = (await params).viewId;
 
   const columns = await api.table.getColumns(tableId);
-
   const { count: rowCount } = await api.table.countRows(tableId);
+
   const view = await api.view.get({ viewId });
+
+  console.log({ view });
+
+  const allViews = await api.view.getViews({ tableId });
 
   return (
     <BaseTable
@@ -34,6 +38,7 @@ export default async function TablePage({
       initialColumnFilters={
         (view?.columnFilters ?? ([] as unknown)) as ColumnFiltersState
       }
+      initialViews={allViews}
     />
   );
 }
