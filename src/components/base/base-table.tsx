@@ -76,7 +76,7 @@ export const BaseTable = ({
   initialSorting,
   initialColumnFilters,
 }: BaseTableProps) => {
-  const FETCH_LIMIT = 1000;
+  const FETCH_LIMIT = 250;
   const utils = api.useUtils();
   const queryClient = useQueryClient();
 
@@ -376,7 +376,7 @@ export const BaseTable = ({
         const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
         //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
         if (
-          scrollHeight - scrollTop - clientHeight < 1000 &&
+          scrollHeight - scrollTop - clientHeight < 2000 &&
           !isFetching &&
           totalFetched < rowCount
         ) {
