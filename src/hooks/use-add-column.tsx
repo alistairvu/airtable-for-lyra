@@ -43,15 +43,6 @@ export const useAddTextColumn = (
         type: ColumnType.TEXT,
       };
 
-      // Optimistically update the columns
-      utils.table.getColumns.setData(tableId, (data) => {
-        if (!data) {
-          return [emptyNewColumn];
-        }
-
-        return [...data, emptyNewColumn];
-      });
-
       // Optimistically update the cells
       utils.table.getInfiniteRows.setInfiniteData(
         { tableId, limit, viewId },
@@ -92,6 +83,15 @@ export const useAddTextColumn = (
           };
         },
       );
+
+      // Optimistically update the columns
+      utils.table.getColumns.setData(tableId, (data) => {
+        if (!data) {
+          return [emptyNewColumn];
+        }
+
+        return [...data, emptyNewColumn];
+      });
 
       return { previousColumns, previousRows };
     },

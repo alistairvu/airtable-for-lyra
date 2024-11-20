@@ -14,15 +14,15 @@ type BaseTableCellProps = {
   isSearching?: boolean;
   isNumber?: boolean;
   table: TanstackTable<RowWithCells>;
-  getValue: Getter<string | number>;
+  initialValue: string | number | undefined;
   isSorted: false | SortDirection;
-  row: TanstackRow<RowWithCells>;
+  rowId: string;
   columnIndex: number;
 };
 
 export const BaseTableCell = memo(function BaseTableCell({
-  getValue,
-  row,
+  initialValue,
+  rowId,
   columnIndex,
   table,
   query,
@@ -30,22 +30,16 @@ export const BaseTableCell = memo(function BaseTableCell({
   isNumber,
   isSorted,
 }: BaseTableCellProps) {
-  const initialValue = getValue();
-
   const [value, setValue] = useState(initialValue ?? "");
-
-  useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
 
   const handleBlur = () => {
     if (typeof initialValue === "number" && typeof value === "number") {
       if (!isNaN(value) && value !== initialValue) {
-        table.options.meta?.updateData?.(row.original.id, columnIndex, value);
+        table.options.meta?.updateData?.(rowId, columnIndex, value);
       }
     } else {
       if (value !== initialValue) {
-        table.options.meta?.updateData?.(row.original.id, columnIndex, value);
+        table.options.meta?.updateData?.(rowId, columnIndex, value);
       }
     }
   };

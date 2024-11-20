@@ -103,9 +103,100 @@ export const BaseTable = ({
 
   const { count: rowCount } = rowCountQuery.data;
 
+  // Column definitions
   const { data: columns } = api.table.getColumns.useQuery(tableId, {
     initialData: initialColumns,
   });
+
+  const columnDef: ColumnDef<RowWithCells, string | number>[] = useMemo(
+    () =>
+      columns.map((col) => ({
+        id: col.id,
+        name: col.name,
+        filterFn:
+          col.type === "NUMBER"
+            ? (row, columnId, filterValue) => {
+                const cell = row
+                  .getAllCells()
+                  .find((cell) => cell.column.id === columnId);
+
+                if (cell && typeof cell.getValue() === "number") {
+                  const { mode, value } = filterValue as IntFilter;
+
+                  if (value === null) {
+                    return true;
+                  }
+
+                  if (mode == "gt") {
+                    return value < (cell.getValue() as number);
+                  }
+
+                  if (mode == "lt") {
+                    return value > (cell.getValue() as number);
+                  }
+
+                  return true;
+                }
+
+                return false;
+              }
+            : (row, columnId, filterValue) => {
+                const cell = row
+                  .getAllCells()
+                  .find((cell) => cell.column.id === columnId);
+
+                if (cell) {
+                  return filterValue
+                    ? cell.getValue() === ""
+                    : cell.getValue() !== "";
+                }
+
+                return false;
+              },
+
+        accessorFn: (row: RowWithCells) => {
+          const cell = row.cells.find((cell) => cell.columnId === col.id);
+
+          if (col.type === "NUMBER") {
+            return cell?.intValue ?? 0;
+          }
+
+          return cell?.textValue ?? "";
+        },
+
+        header: ({ column }) => (
+          <BaseTableHeader
+            column={column}
+            name={col.name}
+            isNumber={col.type === "NUMBER"}
+          />
+        ),
+
+        footer: (props) => props.column.id,
+
+        cell: (props) => {
+          const isSorted = props.column.getIsSorted();
+          const columnIndex = props.column.getIndex();
+          const initialValue = props.getValue();
+
+          return (
+            <BaseTableCell
+              table={props.table}
+              rowId={props.row.original.id}
+              initialValue={initialValue}
+              isSorted={isSorted}
+              columnIndex={columnIndex}
+              query={query}
+              isSearching={isSearching}
+              isNumber={col.type === "NUMBER"}
+            />
+          );
+        },
+      })),
+    [columns, query, isSearching],
+  );
+
+  // Row data
 
   const {
     data: infiniteRowsData,
@@ -206,92 +297,6 @@ export const BaseTable = ({
   });
 
   // Column definitions
-  const columnDef: ColumnDef<RowWithCells, string | number>[] = useMemo(
-    () =>
-      columns.map((col) => ({
-        id: col.id,
-        name: col.name,
-        filterFn:
-          col.type === "NUMBER"
-            ? (row, columnId, filterValue) => {
-                const cell = row
-                  .getAllCells()
-                  .find((cell) => cell.column.id === columnId);
-
-                if (cell && typeof cell.getValue() === "number") {
-                  const { mode, value } = filterValue as IntFilter;
-
-                  if (value === null) {
-                    return true;
-                  }
-
-                  if (mode == "gt") {
-                    return value < (cell.getValue() as number);
-                  }
-
-                  if (mode == "lt") {
-                    return value > (cell.getValue() as number);
-                  }
-
-                  return true;
-                }
-
-                return false;
-              }
-            : (row, columnId, filterValue) => {
-                const cell = row
-                  .getAllCells()
-                  .find((cell) => cell.column.id === columnId);
-
-                if (cell) {
-                  return filterValue
-                    ? cell.getValue() === ""
-                    : cell.getValue() !== "";
-                }
-
-                return false;
-              },
-
-        accessorFn: (row: RowWithCells) => {
-          const cell = row.cells.find((cell) => cell.columnId === col.id);
-
-          if (col.type === "NUMBER") {
-            return cell?.intValue ?? 0;
-          }
-
-          return cell?.textValue ?? "";
-        },
-
-        header: ({ column }) => (
-          <BaseTableHeader
-            column={column}
-            name={col.name}
-            isNumber={col.type === "NUMBER"}
-          />
-        ),
-
-        footer: (props) => props.column.id,
-
-        cell: (props) => {
-          const isSorted = props.column.getIsSorted();
-          const columnIndex = props.column.getIndex();
-
-          return (
-            <BaseTableCell
-              table={props.table}
-              row={props.row}
-              getValue={props.getValue}
-              isSorted={isSorted}
-              columnIndex={columnIndex}
-              query={query}
-              isSearching={isSearching}
-              isNumber={col.type === "NUMBER"}
-            />
-          );
-        },
-      })),
-    [columns, query, isSearching],
-  );
 
   // Actual table hook
   const table = useReactTable({
