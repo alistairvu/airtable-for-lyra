@@ -31,8 +31,9 @@ export const useAddRow = ({
       });
 
       const emptyNewRow = {
-        index: rowCount,
+        index: rowCount + 1,
         id: crypto.randomUUID(),
+        tempId: crypto.randomUUID(),
         tableId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -44,6 +45,7 @@ export const useAddRow = ({
           rowId: crypto.randomUUID(),
           createdAt: new Date(),
           updatedAt: new Date(),
+          tempId: crypto.randomUUID(),
         })),
       };
 

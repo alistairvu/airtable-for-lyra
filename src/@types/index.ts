@@ -1,7 +1,12 @@
 import { type Row, type Cell, type Table, type Base } from "@prisma/client";
 
+export type CellWithTempId = Cell & {
+  tempId?: string;
+};
+
 export type RowWithCells = Row & {
-  cells: Cell[];
+  cells: CellWithTempId[];
+  tempId?: string;
 };
 
 export type BaseWithTables = Base & {

@@ -33,7 +33,7 @@ export const useAddDummyRows = ({
       const emptyNewRows = dummyRows
         .slice(0, limit)
         .map(({ name, age }, index) => ({
-          index: rowCount + index,
+          index: rowCount + index + 1,
           id: crypto.randomUUID(),
           tableId,
           createdAt: new Date(),

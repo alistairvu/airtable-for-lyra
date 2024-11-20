@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TableInput } from "../ui/table-input";
 import { type CellContext } from "@tanstack/react-table";
 import { type RowWithCells } from "~/@types";
@@ -20,20 +20,20 @@ export const BaseTableCell = ({
   const initialValue = getValue();
   const [value, setValue] = useState(initialValue ?? "");
 
-  // useEffect(() => {
-  //   setValue(initialValue);
-  // }, [initialValue]);
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
 
   const handleBlur = () => {
     if (typeof initialValue === "number" && typeof value === "number") {
       if (!isNaN(value) && value !== initialValue) {
         console.log(`editing cell ${row.id}`);
-        table.options.meta?.updateData?.(row.id, column.id, value);
+        table.options.meta?.updateData?.(row.original.id, column.id, value);
       }
     } else {
       if (value !== initialValue) {
         console.log(`editing cell ${row.id}`);
-        table.options.meta?.updateData?.(row.id, column.id, value);
+        table.options.meta?.updateData?.(row.original.id, column.id, value);
       }
     }
   };

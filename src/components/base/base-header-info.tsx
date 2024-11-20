@@ -22,7 +22,7 @@ export const BaseHeaderInfo = ({ base }: BaseHeaderInfoProps) => {
           <ChevronDown className="h-4 w-4" />
         </div>
 
-        <div className="mx-4 flex gap-2">
+        <div className="mx-4 flex items-center justify-center gap-2">
           <div className="flex h-[28px] items-center justify-center rounded-full bg-rose-700 px-3">
             <p className="text-[13px] leading-normal">Data</p>
           </div>
@@ -34,6 +34,8 @@ export const BaseHeaderInfo = ({ base }: BaseHeaderInfoProps) => {
           <div className="flex h-[28px] cursor-pointer items-center justify-center rounded-full bg-rose-600 px-3 hover:bg-rose-700">
             <p className="text-[13px] leading-normal">Interfaces</p>
           </div>
+
+          <div className="h-[20px] w-[1px] bg-rose-300/50" />
 
           <div className="flex h-[28px] cursor-pointer items-center justify-center rounded-full bg-rose-600 px-3 hover:bg-rose-700">
             <p className="text-[13px] leading-normal">Forms</p>

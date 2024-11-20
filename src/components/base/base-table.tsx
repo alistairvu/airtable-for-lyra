@@ -209,7 +209,7 @@ export const BaseTable = ({
   const columnDef: ColumnDef<RowWithCells, string | number>[] = useMemo(
     () =>
       columns.map((col) => ({
-        id: col.id,
+        id: `col:${col.index}`,
         name: col.name,
         filterFn:
           col.type === "NUMBER"
@@ -315,14 +315,20 @@ export const BaseTable = ({
     },
 
     getRowId: (originalRow, _index, _parent) => {
-      return originalRow.id;
+      return "row:" + String(originalRow.index);
     },
 
     // Provide our updateData function to our table meta
     meta: {
       updateData: (rowId: string, columnId: string, value: string | number) => {
-        const isNumber =
-          columns.find((col) => col.id === columnId)?.type === "NUMBER";
+        const columnIndex = parseInt(columnId.split(":")[1] ?? "-1");
+        const matchingColumn = columns.find((col) => col.index === columnIndex);
+
+        if (!matchingColumn) {
+          return;
+        }
+
+        const isNumber = matchingColumn.type === "NUMBER";
         const matchingRow = rows.find((row) => row.id === rowId);
 
         if (!matchingRow) {
@@ -330,7 +336,7 @@ export const BaseTable = ({
         }
 
         const matchingCell = matchingRow.cells.find(
-          (cell) => cell.columnId === columnId,
+          (cell) => cell.columnId === matchingColumn.id,
         );
         if (!matchingCell) {
           return;
@@ -558,7 +564,7 @@ export const BaseTable = ({
                             index + 1 === columns.length
                               ? "border-r"
                               : "border-x-0",
-                            "border-b",
+                            "border-b-0",
                           )}
                           style={{
                             display: "flex",
@@ -579,7 +585,7 @@ export const BaseTable = ({
                         dummyRows: generateDummyRows(5000),
                       })
                     }
-                    className="h-8 cursor-pointer"
+                    className="h-8 cursor-pointer border-t-0"
                     style={{
                       display: "flex",
                       position: "absolute",
@@ -587,7 +593,7 @@ export const BaseTable = ({
                     }}
                   >
                     <TableCell className="flex h-8 w-12 items-center justify-center border-b text-center text-slate-400">
-                      <PlusIcon className="h-4 w-4" /> 5k
+                      <PlusIcon className="h-3 w-3" /> 5k
                     </TableCell>
 
                     {footerGroup.headers.map((column, index) => {
@@ -599,6 +605,7 @@ export const BaseTable = ({
                               ? "border-r"
                               : "border-x-0",
                             "border-b",
+                            "border-t-0",
                           )}
                           style={{
                             display: "flex",

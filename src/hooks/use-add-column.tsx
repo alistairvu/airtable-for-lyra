@@ -29,9 +29,12 @@ export const useAddTextColumn = (
         viewId,
       });
 
+      const nextIndex =
+        Math.max(...(previousColumns?.map((col) => col.index) ?? [0])) + 1;
+
       // Empty column
       const emptyNewColumn = {
-        index: (previousColumns?.length ?? 0) + 1,
+        index: nextIndex,
         id: crypto.randomUUID(),
         tableId,
         createdAt: new Date(),
@@ -77,7 +80,6 @@ export const useAddTextColumn = (
                     rowId: crypto.randomUUID(),
                     createdAt: new Date(),
                     updatedAt: new Date(),
-                    tempId: true,
                   },
                 ],
               })),

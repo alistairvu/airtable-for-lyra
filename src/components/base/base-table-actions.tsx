@@ -10,7 +10,6 @@ import {
 import { type Column } from "@prisma/client";
 import { Button } from "../ui/button";
 import {
-  ArrowUpDown,
   ChevronDown,
   ExternalLink,
   EyeOff,

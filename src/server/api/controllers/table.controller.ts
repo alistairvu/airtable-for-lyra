@@ -264,7 +264,7 @@ export class TableController {
     await this.findBase(tableId, userId);
 
     // Get column index
-    const rowIndex = await this.db.row.aggregate({
+    const columnIndex = await this.db.column.aggregate({
       where: {
         tableId: tableId,
       },
@@ -273,7 +273,7 @@ export class TableController {
       },
     });
 
-    const maxIndex = rowIndex._max;
+    const maxIndex = columnIndex._max;
 
     // Create the actual column
     const column = await this.db.column.create({
