@@ -113,7 +113,7 @@ export const useAddDummyRows = ({
 
     onError: (_err, _newRow, context) => {
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit },
+        { tableId, limit, viewId },
         context?.previousRows ?? {
           pages: [],
           pageParams: [],

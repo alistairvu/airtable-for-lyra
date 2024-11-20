@@ -209,7 +209,7 @@ export const BaseTable = ({
   const columnDef: ColumnDef<RowWithCells, string | number>[] = useMemo(
     () =>
       columns.map((col) => ({
-        id: `col:${col.index}`,
+        id: col.id,
         name: col.name,
         filterFn:
           col.type === "NUMBER"
@@ -321,8 +321,7 @@ export const BaseTable = ({
     // Provide our updateData function to our table meta
     meta: {
       updateData: (rowId: string, columnId: string, value: string | number) => {
-        const columnIndex = parseInt(columnId.split(":")[1] ?? "-1");
-        const matchingColumn = columns.find((col) => col.index === columnIndex);
+        const matchingColumn = columns.find((col) => col.id === columnId);
 
         if (!matchingColumn) {
           return;
@@ -520,10 +519,10 @@ export const BaseTable = ({
                           {virtualRow.index + 1}
                         </div>
                       </TableCell>
-                      {row.getVisibleCells().map((cell) => {
+                      {row.getVisibleCells().map((cell, index) => {
                         return (
                           <TableCell
-                            key={cell.id}
+                            key={`${row.id}:cell:${index}`}
                             className="h-[32px] border border-b-0 border-l-0 border-t-0 py-0"
                             style={{
                               display: "flex",
