@@ -61,7 +61,7 @@ declare module "@tanstack/react-table" {
   interface TableMeta<TData extends RowData> {
     updateData?: (
       rowId: string,
-      columnId: string,
+      columnIndex: number,
       value: string | number,
     ) => void;
 
@@ -272,9 +272,23 @@ export const BaseTable = ({
 
         footer: (props) => props.column.id,
 
-        cell: (props) => (
-          <BaseTableCell {...props} query={query} isSearching={isSearching} />
-        ),
+        cell: (props) => {
+          const isSorted = props.column.getIsSorted();
+          const columnIndex = props.column.getIndex();
+
+          return (
+            <BaseTableCell
+              table={props.table}
+              row={props.row}
+              getValue={props.getValue}
+              isSorted={isSorted}
+              columnIndex={columnIndex}
+              query={query}
+              isSearching={isSearching}
+              isNumber={col.type === "NUMBER"}
+            />
+          );
+        },
       })),
     [columns, query, isSearching],
   );
@@ -320,8 +334,20 @@ export const BaseTable = ({
 
     // Provide our updateData function to our table meta
     meta: {
-      updateData: (rowId: string, columnId: string, value: string | number) => {
-        const matchingColumn = columns.find((col) => col.id === columnId);
+      updateData: (
+        rowId: string,
+        columnIndex: number,
+        value: string | number,
+      ) => {
+        const visibleColumn = table.getVisibleLeafColumns()[columnIndex];
+
+        if (!visibleColumn) {
+          return;
+        }
+
+        const matchingColumn = columns.find(
+          (col) => col.id === visibleColumn.id,
+        );
 
         if (!matchingColumn) {
           return;
@@ -340,8 +366,6 @@ export const BaseTable = ({
         if (!matchingCell) {
           return;
         }
-
-        console.log({ matchingCell });
 
         const cellId = matchingCell.id;
 

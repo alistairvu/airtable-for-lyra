@@ -122,8 +122,8 @@ export const useAddDummyRows = ({
     },
 
     onSettled: async () => {
-      await utils.table.countRows.invalidate(tableId);
       await utils.table.getInfiniteRows.invalidate({ tableId, limit, viewId });
+      await utils.table.countRows.invalidate(tableId);
     },
   });
 

@@ -111,8 +111,6 @@ export const useEditIntCell = (
         viewId,
       });
 
-      console.log({ previousRows });
-
       // Optimistically update
       utils.table.getInfiniteRows.setInfiniteData(
         { tableId, limit, viewId },

@@ -1,23 +1,37 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { TableInput } from "../ui/table-input";
-import { type CellContext } from "@tanstack/react-table";
+import {
+  type Getter,
+  type SortDirection,
+  type Row as TanstackRow,
+  type Table as TanstackTable,
+} from "@tanstack/react-table";
 import { type RowWithCells } from "~/@types";
 import { cn } from "~/lib/utils";
 
-type BaseTableCellProps = CellContext<RowWithCells, string | number> & {
+type BaseTableCellProps = {
   query: string;
   isSearching?: boolean;
+  isNumber?: boolean;
+  table: TanstackTable<RowWithCells>;
+  getValue: Getter<string | number>;
+  isSorted: false | SortDirection;
+  row: TanstackRow<RowWithCells>;
+  columnIndex: number;
 };
 
-export const BaseTableCell = ({
+export const BaseTableCell = memo(function BaseTableCell({
   getValue,
   row,
-  column,
+  columnIndex,
   table,
   query,
   isSearching,
-}: BaseTableCellProps) => {
+  isNumber,
+  isSorted,
+}: BaseTableCellProps) {
   const initialValue = getValue();
+
   const [value, setValue] = useState(initialValue ?? "");
 
   useEffect(() => {
@@ -27,13 +41,11 @@ export const BaseTableCell = ({
   const handleBlur = () => {
     if (typeof initialValue === "number" && typeof value === "number") {
       if (!isNaN(value) && value !== initialValue) {
-        console.log(`editing cell ${row.id}`);
-        table.options.meta?.updateData?.(row.original.id, column.id, value);
+        table.options.meta?.updateData?.(row.original.id, columnIndex, value);
       }
     } else {
       if (value !== initialValue) {
-        console.log(`editing cell ${row.id}`);
-        table.options.meta?.updateData?.(row.original.id, column.id, value);
+        table.options.meta?.updateData?.(row.original.id, columnIndex, value);
       }
     }
   };
@@ -53,17 +65,17 @@ export const BaseTableCell = ({
   return (
     <TableInput
       className={cn(
-        "my-0 rounded-none border-none px-2 shadow-none",
-        (column.getIsSorted() || matchesQuery()) && "bg-[#f4e9e4]",
+        "my-0 truncate rounded-none border-none px-2 shadow-none",
+        (isSorted ?? matchesQuery()) && "bg-[#f4e9e4]",
       )}
       value={typeof value === "string" ? value : isNaN(value) ? "" : value}
       onChange={(e) =>
-        table.options.meta?.isNumber?.(column.id)
-          ? setValue(e.target.valueAsNumber)
-          : setValue(e.target.value)
+        isNumber ? setValue(e.target.valueAsNumber) : setValue(e.target.value)
       }
       onBlur={handleBlur}
-      type={table.options.meta?.isNumber?.(column.id) ? "number" : "text"}
+      type={isNumber ? "number" : "text"}
     />
   );
-};
+});
+
+BaseTableCell.whyDidYouRender = true;

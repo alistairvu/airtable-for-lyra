@@ -108,8 +108,10 @@ export const useAddTextColumn = (
     },
 
     onSettled: async () => {
-      await utils.table.getColumns.invalidate(tableId);
-      await utils.table.getInfiniteRows.invalidate({ tableId, limit, viewId });
+      await Promise.allSettled([
+        utils.table.getInfiniteRows.invalidate({ tableId, limit, viewId }),
+        utils.table.getColumns.invalidate(tableId),
+      ]);
     },
   });
 

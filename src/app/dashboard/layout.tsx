@@ -17,7 +17,9 @@ export default async function DashboardLayout({
 
   return (
     <HydrateClient>
-      <SidebarProvider>
+      <SidebarProvider
+        style={{ "--sidebar-width": "300px" } as React.CSSProperties}
+      >
         <SidebarInset>
           <div className="relative">
             <DashboardHeader />
