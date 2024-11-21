@@ -41,6 +41,7 @@ export const useAddTextColumn = (
         updatedAt: new Date(),
         name: "Label",
         type: ColumnType.TEXT,
+        disabled: true,
       };
 
       // Optimistically update the cells

@@ -1,4 +1,10 @@
-import { type Row, type Cell, type Table, type Base } from "@prisma/client";
+import {
+  type Row,
+  type Cell,
+  type Table,
+  type Base,
+  type Column,
+} from "@prisma/client";
 
 export type CellWithTempId = Cell & {
   tempId?: string;
@@ -16,4 +22,8 @@ export type BaseWithTables = Base & {
 export type IntFilter = {
   mode: "lt" | "gt";
   value: number | null;
+};
+
+export type ColumnWithDisabled = Column & {
+  disabled?: boolean;
 };

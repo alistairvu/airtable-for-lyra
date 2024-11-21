@@ -13,7 +13,11 @@ import {
   functionalUpdate,
 } from "@tanstack/react-table";
 import { type View, type Column } from "@prisma/client";
-import { type IntFilter, type RowWithCells } from "~/@types";
+import {
+  type ColumnWithDisabled,
+  type IntFilter,
+  type RowWithCells,
+} from "~/@types";
 import {
   Table,
   TableBody,
@@ -110,7 +114,7 @@ export const BaseTable = ({
 
   const columnDef: ColumnDef<RowWithCells, string | number>[] = useMemo(
     () =>
-      columns.map((col) => ({
+      (columns as ColumnWithDisabled[]).map((col) => ({
         id: col.id,
         name: col.name,
         filterFn:
@@ -189,6 +193,7 @@ export const BaseTable = ({
               query={query}
               isSearching={isSearching}
               isNumber={col.type === "NUMBER"}
+              disabled={col.disabled}
             />
           );
         },

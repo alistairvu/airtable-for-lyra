@@ -16,6 +16,8 @@ type BaseTableCellProps = {
   isSorted: false | SortDirection;
   rowId: string;
   columnIndex: number;
+
+  disabled?: boolean;
 };
 
 export const BaseTableCell = memo(function BaseTableCell({
@@ -26,6 +28,7 @@ export const BaseTableCell = memo(function BaseTableCell({
   query,
   isNumber,
   isSorted,
+  disabled,
 }: BaseTableCellProps) {
   const [value, setValue] = useState(initialValue ?? "");
 
@@ -52,7 +55,9 @@ export const BaseTableCell = memo(function BaseTableCell({
       return false;
     }
 
-    return String(value).toLowerCase().includes(query.toLowerCase());
+    const searchRegex = new RegExp(`${query}`, "ig");
+
+    return searchRegex.test(String(value));
   };
 
   return (
@@ -67,6 +72,7 @@ export const BaseTableCell = memo(function BaseTableCell({
       }
       onBlur={handleBlur}
       type={isNumber ? "number" : "text"}
+      disabled={disabled}
     />
   );
 });
