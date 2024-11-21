@@ -1,8 +1,8 @@
 "use client";
 
 import { type Dispatch, type SetStateAction } from "react";
-import { BaseTableFilter } from "./base-table-filter";
-import { BaseTableSearch } from "./base-table-search";
+import { BaseTableFilter } from "./actions/base-table-filter";
+import { BaseTableSearch } from "./actions/base-table-search";
 import {
   type SortingState,
   type ColumnFiltersState,
@@ -22,7 +22,7 @@ import { RowHeightIcon } from "../icons/row-height-icon";
 import { Separator } from "../ui/separator";
 import { UsersThreeIcon } from "../icons/users-three-icon";
 import { useTableSidebar } from "~/hooks/use-table-sidebar";
-import { BaseTableSort } from "./base-table-sort";
+import { BaseTableSort } from "./actions/base-table-sort";
 
 type BaseTableActionsProps = {
   columns: Column[];
@@ -30,7 +30,7 @@ type BaseTableActionsProps = {
   isSearching: boolean;
   setIsSearching: Dispatch<SetStateAction<boolean>>;
   query: string;
-  setQuery: Dispatch<SetStateAction<string>>;
+  handleEditQuery: (query: string) => void;
 
   columnFilters: ColumnFiltersState;
   setColumnFilters: Dispatch<SetStateAction<ColumnFiltersState>>;
@@ -40,7 +40,7 @@ type BaseTableActionsProps = {
 };
 
 export const BaseTableActions = (props: BaseTableActionsProps) => {
-  const { isSearching, setIsSearching, query, setQuery } = props;
+  const { isSearching, setIsSearching, query, handleEditQuery } = props;
   const { columns, columnFilters, setColumnFilters } = props;
   const { sorting, setSorting } = props;
 
@@ -111,7 +111,7 @@ export const BaseTableActions = (props: BaseTableActionsProps) => {
           isSearching={isSearching}
           setIsSearching={setIsSearching}
           query={query}
-          setQuery={setQuery}
+          handleEditQuery={handleEditQuery}
         />
       </div>
     </div>

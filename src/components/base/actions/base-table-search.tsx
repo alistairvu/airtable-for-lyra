@@ -1,7 +1,11 @@
 import { Search } from "lucide-react";
-import { Button } from "../ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Input } from "../ui/input";
+import { Button } from "~/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
+import { Input } from "~/components/ui/input";
 import { type Dispatch, type SetStateAction } from "react";
 
 type BaseTableSearchProps = {
@@ -9,17 +13,23 @@ type BaseTableSearchProps = {
   setIsSearching: Dispatch<SetStateAction<boolean>>;
 
   query: string;
-  setQuery: Dispatch<SetStateAction<string>>;
+  handleEditQuery: (query: string) => void;
 };
 
 export const BaseTableSearch = ({
   isSearching,
   setIsSearching,
   query,
-  setQuery,
+  handleEditQuery,
 }: BaseTableSearchProps) => {
   return (
-    <Popover open={isSearching} onOpenChange={(open) => setIsSearching(open)}>
+    <Popover
+      open={isSearching}
+      onOpenChange={(open) => {
+        setIsSearching(open);
+        handleEditQuery("");
+      }}
+    >
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" aria-label="Search Table">
           <Search />
@@ -31,7 +41,7 @@ export const BaseTableSearch = ({
           type="text"
           placeholder="Find in view"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => handleEditQuery(e.target.value)}
         />
       </PopoverContent>
     </Popover>

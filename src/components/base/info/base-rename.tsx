@@ -121,7 +121,11 @@ export const BaseRename = ({ initialBase }: BaseRenameProps) => {
                 <FormItem>
                   <FormLabel>Base name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Base name..." {...field} />
+                    <Input
+                      placeholder="Base name..."
+                      data-1p-ignore
+                      {...field}
+                    />
                   </FormControl>
                   <FormDescription>
                     This is the name of your base

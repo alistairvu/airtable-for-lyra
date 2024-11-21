@@ -1,9 +1,7 @@
 import { memo, useCallback, useEffect, useState } from "react";
 import { TableInput } from "../ui/table-input";
 import {
-  type Getter,
   type SortDirection,
-  type Row as TanstackRow,
   type Table as TanstackTable,
 } from "@tanstack/react-table";
 import { type RowWithCells } from "~/@types";
@@ -26,7 +24,6 @@ export const BaseTableCell = memo(function BaseTableCell({
   columnIndex,
   table,
   query,
-  isSearching,
   isNumber,
   isSorted,
 }: BaseTableCellProps) {
@@ -48,25 +45,21 @@ export const BaseTableCell = memo(function BaseTableCell({
         table.options.meta?.updateData?.(rowId, columnIndex, value);
       }
     }
-  }, [value, initialValue]);
+  }, [value, initialValue, columnIndex, rowId, table.options.meta]);
 
-  const matchesQuery = useCallback(() => {
-    if (!isSearching) {
-      return false;
-    }
-
+  const matchesQuery = () => {
     if (query === "") {
       return false;
     }
 
-    return String(value).includes(query);
-  }, [isSearching, query, value]);
+    return String(value).toLowerCase().includes(query.toLowerCase());
+  };
 
   return (
     <TableInput
       className={cn(
         "my-0 truncate rounded-none border-none px-2 shadow-none",
-        (isSorted ?? matchesQuery()) && "bg-[#f4e9e4]",
+        (isSorted || matchesQuery()) && "bg-[#f4e9e4]",
       )}
       value={typeof value === "string" ? value : isNaN(value) ? "" : value}
       onChange={(e) =>

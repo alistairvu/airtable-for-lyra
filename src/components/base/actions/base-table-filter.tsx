@@ -1,6 +1,10 @@
 import { ListFilter, Plus, Trash } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Button } from "../ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
+import { Button } from "~/components/ui/button";
 import { type ColumnFiltersState } from "@tanstack/react-table";
 import { createContext, type Dispatch, type SetStateAction, use } from "react";
 import { type Column } from "@prisma/client";
@@ -10,9 +14,9 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from "../ui/select";
+} from "~/components/ui/select";
 import { type IntFilter } from "~/@types";
-import { Input } from "../ui/input";
+import { Input } from "~/components/ui/input";
 
 type BaseTableFilterProps = {
   columnFilters: ColumnFiltersState;

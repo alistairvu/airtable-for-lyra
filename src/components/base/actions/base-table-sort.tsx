@@ -1,9 +1,13 @@
 import { type Column } from "@prisma/client";
-import { Popover, PopoverTrigger, PopoverContent } from "../ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "~/components/ui/popover";
 import { type SortingState } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { type Dispatch, type SetStateAction } from "react";
-import { Button } from "../ui/button";
+import { Button } from "~/components/ui/button";
 
 type BaseTableSortProps = {
   sorting: SortingState;

@@ -324,7 +324,9 @@ export const BaseTable = ({
         columnFilters: newFilters,
       });
     },
+
     getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: "includesString",
 
     manualSorting: true,
 
@@ -429,6 +431,12 @@ export const BaseTable = ({
     void fetchMoreOnBottomReached(tableContainerRef.current);
   }, [fetchMoreOnBottomReached]);
 
+  // SECTION: Handle global filter
+  const handleEditQuery = (query: string) => {
+    setQuery(query);
+    table.setGlobalFilter(query);
+  };
+
   return (
     <TableSidebarContext.Provider
       value={{ open: sidebarOpen, setIsOpen: setSidebarOpen }}
@@ -438,7 +446,7 @@ export const BaseTable = ({
           isSearching={isSearching}
           setIsSearching={setIsSearching}
           query={query}
-          setQuery={setQuery}
+          handleEditQuery={handleEditQuery}
           columnFilters={columnFilters}
           setColumnFilters={setColumnFilters}
           columns={columns}

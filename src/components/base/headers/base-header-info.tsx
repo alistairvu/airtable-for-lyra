@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { WhiteIcon } from "../icons/white-icon";
+import { WhiteIcon } from "../../icons/white-icon";
 import { type BaseWithTables } from "~/@types";
 import { Bell, CircleHelp, History, Users } from "lucide-react";
-import { AirtablePlusIcon } from "../icons/airtable-plus-icon";
-import { BaseRename } from "./info/base-rename";
+import { AirtablePlusIcon } from "../../icons/airtable-plus-icon";
+import { BaseRename } from "../info/base-rename";
 
 type BaseHeaderInfoProps = {
   base: BaseWithTables;
