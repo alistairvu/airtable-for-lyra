@@ -469,6 +469,7 @@ export const BaseTable = ({
             className="flex-grow"
             style={{
               height: "calc(100vh - 88px - 44px)",
+              minHeight: "calc(100vh - 88px - 44px)",
               overflow: "auto",
               position: "relative",
             }}
@@ -534,6 +535,7 @@ export const BaseTable = ({
                 style={{
                   display: "grid",
                   height: `${rowVirtualizer.getTotalSize() + 32 * 5}px`, //tells scrollbar how big the table is
+                  minHeight: "calc(100vh - 88px - 44px - 64px)",
                   position: "relative",
                 }}
               >
@@ -656,7 +658,7 @@ export const BaseTable = ({
             </Table>
 
             <div
-              className={`fixed bottom-0 ${sidebarOpen ? "left-[282px]" : "left-0"} z-20 flex h-[24px] w-full items-center justify-start border-t bg-slate-100 pl-2 text-[11px]`}
+              className={`sticky bottom-0 left-0 z-20 flex h-[24px] w-full items-center justify-start border-t bg-slate-100 pl-2 text-[11px]`}
             >
               <span>
                 {rowCount} {rowCount !== 1 ? "rows" : "row"}
