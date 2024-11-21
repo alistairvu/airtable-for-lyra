@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { WhiteIcon } from "../icons/white-icon";
 import { type BaseWithTables } from "~/@types";
-import { Bell, ChevronDown, CircleHelp, History, Users } from "lucide-react";
+import { Bell, CircleHelp, History, Users } from "lucide-react";
 import { AirtablePlusIcon } from "../icons/airtable-plus-icon";
+import { BaseRename } from "./info/base-rename";
 
 type BaseHeaderInfoProps = {
   base: BaseWithTables;
@@ -16,11 +17,7 @@ export const BaseHeaderInfo = ({ base }: BaseHeaderInfoProps) => {
           <WhiteIcon />
         </Link>
 
-        <div className="flex items-center justify-center gap-1">
-          <h1 className="truncate text-[17px] font-medium">{base.name}</h1>
-
-          <ChevronDown className="h-4 w-4" />
-        </div>
+        <BaseRename initialBase={base} />
 
         <div className="mx-4 flex items-center justify-center gap-2">
           <div className="flex h-[28px] items-center justify-center rounded-full bg-rose-700 px-3">

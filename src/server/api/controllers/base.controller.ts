@@ -216,4 +216,42 @@ export class BaseController {
 
     return base.tables;
   }
+
+  async rename({
+    baseId,
+    userId,
+    name,
+  }: {
+    baseId: string;
+    userId: string;
+    name: string;
+  }) {
+    const base = await this.db.base.findFirst({
+      where: {
+        id: baseId,
+        userId,
+      },
+      include: {
+        tables: {
+          orderBy: {
+            index: "asc",
+          },
+        },
+      },
+    });
+
+    if (base === null) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: `Base with ID ${baseId} does not exist, or you cannot access it.`,
+      });
+    }
+
+    return this.db.base.update({
+      where: {
+        id: baseId,
+      },
+      data: { name },
+    });
+  }
 }

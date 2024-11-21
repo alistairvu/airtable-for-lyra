@@ -78,4 +78,20 @@ export const baseRouter = createTRPCRouter({
 
       return controller.createTable(baseId, user.id);
     }),
+
+  rename: protectedProcedure
+    .input(
+      z.object({
+        baseId: z.string(),
+        name: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const controller = new BaseController(ctx.db);
+
+      const { baseId, name } = input;
+      const { user } = ctx.session;
+
+      return controller.rename({ baseId, name, userId: user.id });
+    }),
 });

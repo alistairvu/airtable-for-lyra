@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { TableInput } from "../ui/table-input";
 import {
   type Getter,
@@ -32,8 +32,14 @@ export const BaseTableCell = memo(function BaseTableCell({
 }: BaseTableCellProps) {
   const [value, setValue] = useState(initialValue ?? "");
 
-  const handleBlur = () => {
-    if (typeof initialValue === "number" && typeof value === "number") {
+  useEffect(() => {
+    if (initialValue) {
+      setValue(initialValue);
+    }
+  }, [initialValue]);
+
+  const handleBlur = useCallback(() => {
+    if (typeof value === "number") {
       if (!isNaN(value) && value !== initialValue) {
         table.options.meta?.updateData?.(rowId, columnIndex, value);
       }
@@ -42,9 +48,9 @@ export const BaseTableCell = memo(function BaseTableCell({
         table.options.meta?.updateData?.(rowId, columnIndex, value);
       }
     }
-  };
+  }, [value, initialValue]);
 
-  const matchesQuery = () => {
+  const matchesQuery = useCallback(() => {
     if (!isSearching) {
       return false;
     }
@@ -54,7 +60,7 @@ export const BaseTableCell = memo(function BaseTableCell({
     }
 
     return String(value).includes(query);
-  };
+  }, [isSearching, query, value]);
 
   return (
     <TableInput
@@ -71,5 +77,3 @@ export const BaseTableCell = memo(function BaseTableCell({
     />
   );
 });
-
-BaseTableCell.whyDidYouRender = true;
