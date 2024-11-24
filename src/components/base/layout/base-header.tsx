@@ -1,7 +1,7 @@
 "use client";
 
-import { BaseHeaderInfo } from "./headers/base-header-info";
-import { BaseHeaderTableList } from "./headers/base-header-table-list";
+import { BaseHeaderInfo } from "../headers/base-header-info";
+import { BaseHeaderTableList } from "../headers/base-header-table-list";
 import { type BaseWithTables } from "~/@types";
 
 type BaseHeaderProps = {

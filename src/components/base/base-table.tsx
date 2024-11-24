@@ -43,7 +43,7 @@ import { BaseTableActions } from "./base-table-actions";
 import { useEditIntCell, useEditTextCell } from "~/hooks/use-edit-cell";
 import { useAddTextColumn } from "~/hooks/use-add-column";
 import { useAddRow } from "~/hooks/use-add-row";
-import { BaseSidebar } from "./base-sidebar";
+import { BaseSidebar } from "./layout/base-sidebar";
 import { TableSidebarContext } from "~/hooks/use-table-sidebar";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";

@@ -105,8 +105,6 @@ export class ViewController {
       },
     });
 
-    console.log({ viewCount });
-
     if (viewCount === 0) {
       return this.create(tableId, userId);
     }

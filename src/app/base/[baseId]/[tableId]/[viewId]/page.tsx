@@ -24,8 +24,6 @@ export default async function TablePage({
 
   const view = await api.view.get({ viewId });
 
-  console.log({ view });
-
   const allViews = await api.view.getViews({ tableId });
 
   return (

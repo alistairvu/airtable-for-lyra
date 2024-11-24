@@ -1,6 +1,4 @@
 import { notFound, redirect } from "next/navigation";
-import { BaseContainer } from "~/components/base/base-container";
-import { BaseTable } from "~/components/base/base-table";
 import { api } from "~/trpc/server";
 
 type BaseProps = {

@@ -1,4 +1,4 @@
-import { type PrismaClient } from "@prisma/client";
+import { type Table, type PrismaClient } from "@prisma/client";
 import { type SortingState } from "@tanstack/react-table";
 import { TRPCError } from "@trpc/server";
 
@@ -460,6 +460,35 @@ export class TableController {
 
     await this.db.cell.createMany({
       data: cellData,
+    });
+  }
+
+  /**
+   * Renames a table
+   * @param {Object} params - The parameters for renaming the table
+   * @param {string} params.tableId - The ID of the table to rename
+   * @param {string} params.userId - The ID of the user performing the rename
+   * @param {string} params.name - The new name for the table
+   * @returns {Promise<Table>} The updated table record
+   */
+  async rename({
+    tableId,
+    userId,
+    name,
+  }: {
+    tableId: string;
+    userId: string;
+    name: string;
+  }): Promise<Table> {
+    await this.findBase(tableId, userId);
+
+    return this.db.table.update({
+      where: {
+        id: tableId,
+      },
+      data: {
+        name,
+      },
     });
   }
 }

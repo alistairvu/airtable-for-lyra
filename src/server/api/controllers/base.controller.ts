@@ -92,7 +92,11 @@ export class BaseController {
         userId,
       },
       include: {
-        tables: true,
+        tables: {
+          orderBy: {
+            index: "asc",
+          },
+        },
       },
     });
 
@@ -230,13 +234,6 @@ export class BaseController {
       where: {
         id: baseId,
         userId,
-      },
-      include: {
-        tables: {
-          orderBy: {
-            index: "asc",
-          },
-        },
       },
     });
 

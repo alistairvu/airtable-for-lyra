@@ -1,6 +1,4 @@
-import { notFound, redirect } from "next/navigation";
-import { BaseContainer } from "~/components/base/base-container";
-import { BaseHeader } from "~/components/base/base-header";
+import { BaseHeader } from "~/components/base/layout/base-header";
 import { api, HydrateClient } from "~/trpc/server";
 
 type BaseProps = {

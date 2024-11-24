@@ -18,6 +18,23 @@ export const tableRouter = createTRPCRouter({
       return rows;
     }),
 
+  rename: protectedProcedure
+    .input(
+      z.object({
+        name: z.string(),
+        tableId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const controller = new TableController(ctx.db);
+      const table = await controller.rename({
+        name: input.name,
+        tableId: input.tableId,
+        userId: ctx.session.user.id,
+      });
+      return table;
+    }),
+
   addRow: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input }) => {

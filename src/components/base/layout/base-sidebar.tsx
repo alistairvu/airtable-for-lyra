@@ -13,13 +13,13 @@ import {
   Search,
 } from "lucide-react";
 import { useTableSidebar } from "~/hooks/use-table-sidebar";
-import { GridFeatureIcon } from "../icons/grid-feature-icon";
+import { GridFeatureIcon } from "../../icons/grid-feature-icon";
 import { useState } from "react";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import { cn } from "~/lib/utils";
-import { GanttIcon } from "../icons/gantt-icon";
-import { Separator } from "../ui/separator";
-import { FormIcon } from "../icons/form-icon";
+import { GanttIcon } from "../../icons/gantt-icon";
+import { Separator } from "../../ui/separator";
+import { FormIcon } from "../../icons/form-icon";
 import { type View } from "@prisma/client";
 import { api } from "~/trpc/react";
 import Link from "next/link";

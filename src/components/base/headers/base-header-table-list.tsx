@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { type BaseWithTables } from "~/@types";
 import { api } from "~/trpc/react";
+import { BaseTableRename } from "../actions/base-table-rename";
 
 type BaseHeaderTableProps = {
   base: BaseWithTables;
@@ -55,11 +56,7 @@ export const BaseHeaderTableList = ({ base }: BaseHeaderTableProps) => {
             <nav className="flex flex-none text-[13px]" aria-label="Tables">
               {tables.map((table, index) =>
                 isSelected(index) ? (
-                  <div key={table.id} className="flex">
-                    <div className="height-full flex flex-auto cursor-pointer items-center rounded-t bg-white p-1 px-3 font-medium text-black">
-                      {table.name} <ChevronDown className="ml-1 h-4 w-4" />
-                    </div>
-                  </div>
+                  <BaseTableRename table={table} key={table.id} />
                 ) : (
                   <Link
                     key={table.id}
