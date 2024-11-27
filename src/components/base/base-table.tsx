@@ -423,6 +423,9 @@ export const BaseTable = ({
   const handleEditQuery = (query: string) => {
     setQuery(query);
     table.setGlobalFilter(query);
+    if (!!table.getRowModel().rows.length) {
+      rowVirtualizer.scrollToIndex?.(0);
+    }
   };
 
   return (
