@@ -1,6 +1,7 @@
-import { type Table, type PrismaClient } from "@prisma/client";
+import { type Table, type PrismaClient, type Column } from "@prisma/client";
 import { type SortingState } from "@tanstack/react-table";
 import { TRPCError } from "@trpc/server";
+import { type IntFilter, type ViewColumnFilter } from "~/@types";
 
 type AddDummyParams = {
   name: string;
@@ -65,6 +66,14 @@ export class TableController {
     });
   }
 
+  /**
+   * Retrieves all rows from a table with their associated cells, ordered by index.
+   *
+   * @param tableId - The ID of the table to fetch rows from
+   * @param userId - The ID of the user requesting the rows
+   * @returns A Promise that resolves to an array of rows with their included cells,
+   *          sorted by their index in ascending order
+   */
   async getRows(tableId: string, userId: string) {
     await this.findBase(tableId, userId);
 
@@ -81,6 +90,94 @@ export class TableController {
     });
   }
 
+  generateWhereClause(filters: ViewColumnFilter[] | null, columns: Column[]) {
+    if (filters === null) {
+      return undefined;
+    }
+
+    if (filters.length === 0) {
+      return undefined;
+    }
+
+    const whereFilters = filters
+      .map((f) => {
+        const column = columns.find((c) => c.id === f.id);
+
+        if (column === undefined) {
+          return undefined;
+        }
+
+        if (column.type === "TEXT") {
+          return {
+            columnId: f.id,
+            textValue: f.value
+              ? {
+                  equals: "",
+                }
+              : {
+                  NOT: {
+                    equals: "",
+                  },
+                },
+          };
+        }
+
+        if (column.type === "NUMBER") {
+          const intFilter = f.value as IntFilter;
+
+          if (intFilter.mode === "gt") {
+            return {
+              columnId: f.id,
+              intValue: {
+                gt: intFilter.value,
+              },
+            };
+          }
+
+          if (intFilter.mode === "lt") {
+            return {
+              columnId: f.id,
+              intValue: {
+                gt: intFilter.value,
+              },
+            };
+          }
+        }
+
+        return undefined;
+      })
+      .filter((x) => x !== undefined);
+
+    const where = {
+      row: {
+        cells: {
+          some: {
+            AND: whereFilters,
+          },
+        },
+      },
+    };
+
+    return where;
+  }
+
+  /**
+   * Retrieves rows from a table with pagination and optional sorting based on a view.
+   *
+   * @param tableId - The ID of the table to fetch rows from
+   * @param cursor - The pagination cursor indicating where to start fetching rows
+   * @param limit - The maximum number of rows to return
+   * @param userId - The ID of the user requesting the rows
+   * @param viewId - Optional view ID that may contain sorting preferences
+   *
+   * @returns An object containing:
+   *  - items: Array of rows with their associated cells
+   *  - nextCursor: The cursor position for the next page of results
+   *
+   * If a viewId is provided and contains sorting information, the rows will be sorted
+   * according to the view's preferences. Otherwise, rows are sorted by their index
+   * in ascending order.
+   */
   async getInfiniteRows(
     tableId: string,
     cursor: number,
@@ -107,8 +204,6 @@ export class TableController {
           // One column at a time
           const sortingObject = parsedSorting[0];
 
-          console.log({ sortingObject });
-
           if (sortingObject !== undefined) {
             const { id, desc } = sortingObject;
 
@@ -119,6 +214,12 @@ export class TableController {
             });
 
             const isText = column?.type === "TEXT";
+            const columns = await this.getColumns(tableId, userId);
+
+            const rowWhere = this.generateWhereClause(
+              view.columnFilters as ViewColumnFilter[],
+              columns,
+            );
 
             // Getting the rows we can render
             const rowIds = await this.db.cell.findMany({
@@ -126,6 +227,7 @@ export class TableController {
               skip: cursor,
               where: {
                 columnId: id,
+                // row: rowWhere ? rowWhere.row : undefined,
               },
               select: {
                 rowId: true,
@@ -183,6 +285,15 @@ export class TableController {
     return { items, nextCursor };
   }
 
+  /**
+   * Updates the value of a text cell in the database.
+   *
+   * @param cellId - The ID of the cell to edit
+   * @param value - The new text value to set
+   * @param userId - The ID of the user performing the edit
+   * @returns A Promise that resolves to the updated cell
+   * @throws {TRPCError} If the cell is not found or user doesn't have access
+   */
   async editTextCell(cellId: string, value: string, userId: string) {
     const table = await this.db.table.findFirst({
       where: {

@@ -26,6 +26,7 @@ import { BaseTableSort } from "./actions/base-table-sort";
 
 type BaseTableActionsProps = {
   columns: Column[];
+  viewId: string;
 
   isSearching: boolean;
   setIsSearching: Dispatch<SetStateAction<boolean>>;
@@ -42,7 +43,7 @@ type BaseTableActionsProps = {
 export const BaseTableActions = (props: BaseTableActionsProps) => {
   const { isSearching, setIsSearching, query, handleEditQuery } = props;
   const { columns, columnFilters, setColumnFilters } = props;
-  const { sorting, setSorting } = props;
+  const { sorting, setSorting, viewId } = props;
 
   const { setIsOpen } = useTableSidebar();
 
@@ -80,6 +81,7 @@ export const BaseTableActions = (props: BaseTableActionsProps) => {
           columnFilters={columnFilters}
           setColumnFilters={setColumnFilters}
           columns={columns}
+          viewId={viewId}
         />
 
         <Button variant="ghost" size="sm" className="px-2 py-1">

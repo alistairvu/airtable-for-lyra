@@ -27,3 +27,8 @@ export type IntFilter = {
 export type ColumnWithDisabled = Column & {
   disabled?: boolean;
 };
+
+export type ViewColumnFilter = {
+  id: string;
+  value: boolean | IntFilter;
+};

@@ -282,24 +282,7 @@ export const BaseTable = ({
   });
 
   // SECTION: Mutation for saving the sorting view
-  const setViewColumnFilters = api.view.setColumnFilters.useMutation({
-    // onMutate: () => {
-    //   queryClient.removeQueries({
-    //     queryKey: getQueryKey(
-    //       api.table.getInfiniteRows,
-    //       { tableId, limit: FETCH_LIMIT, viewId },
-    //       "infinite",
-    //     ),
-    //   });
-    // },
-    // onSettled: async () => {
-    //   await utils.table.getInfiniteRows.invalidate({
-    //     tableId,
-    //     limit: FETCH_LIMIT,
-    //     viewId,
-    //   });
-    // },
-  });
+  const setViewColumnFilters = api.view.setColumnFilters.useMutation();
 
   // Column definitions
 
@@ -457,6 +440,7 @@ export const BaseTable = ({
           columns={columns}
           sorting={sorting}
           setSorting={setSorting}
+          viewId={viewId}
         />
 
         <div className="flex">
