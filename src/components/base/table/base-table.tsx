@@ -13,11 +13,7 @@ import {
   functionalUpdate,
 } from "@tanstack/react-table";
 import { type View, type Column } from "@prisma/client";
-import {
-  type ColumnWithDisabled,
-  type IntFilter,
-  type RowWithCells,
-} from "~/@types";
+import { type RowWithCells } from "~/@types";
 import {
   Table,
   TableBody,
@@ -25,8 +21,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
-import { BaseTableCell } from "./base-table-cell";
+} from "../../ui/table";
 import { api } from "~/trpc/react";
 import React, {
   useCallback,
@@ -36,19 +31,19 @@ import React, {
   useState,
 } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { BaseTableHeader } from "./base-table-header";
 import { cn } from "~/lib/utils";
 import { PlusIcon } from "lucide-react";
-import { BaseTableActions } from "./base-table-actions";
+import { BaseTableActions } from "../headers/base-table-actions";
 import { useEditIntCell, useEditTextCell } from "~/hooks/use-edit-cell";
 import { useAddTextColumn } from "~/hooks/use-add-column";
 import { useAddRow } from "~/hooks/use-add-row";
-import { BaseSidebar } from "./layout/base-sidebar";
+import { BaseSidebar } from "../layout/base-sidebar";
 import { TableSidebarContext } from "~/hooks/use-table-sidebar";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { useAddDummyRows } from "~/hooks/use-add-dummy-rows";
 import { faker } from "@faker-js/faker";
+import { getColumns } from "./base-table-columns";
 
 type BaseTableProps = {
   tableId: string;
@@ -113,96 +108,11 @@ export const BaseTable = ({
   });
 
   const columnDef: ColumnDef<RowWithCells, string | number>[] = useMemo(
-    () =>
-      (columns as ColumnWithDisabled[]).map((col) => ({
-        id: col.id,
-        name: col.name,
-        filterFn:
-          col.type === "NUMBER"
-            ? (row, columnId, filterValue) => {
-                const cell = row
-                  .getAllCells()
-                  .find((cell) => cell.column.id === columnId);
-
-                if (cell && typeof cell.getValue() === "number") {
-                  const { mode, value } = filterValue as IntFilter;
-
-                  if (value === null) {
-                    return true;
-                  }
-
-                  if (mode == "gt") {
-                    return value < (cell.getValue() as number);
-                  }
-
-                  if (mode == "lt") {
-                    return value > (cell.getValue() as number);
-                  }
-
-                  return true;
-                }
-
-                return false;
-              }
-            : (row, columnId, filterValue) => {
-                const cell = row
-                  .getAllCells()
-                  .find((cell) => cell.column.id === columnId);
-
-                if (cell) {
-                  return filterValue
-                    ? cell.getValue() === ""
-                    : cell.getValue() !== "";
-                }
-
-                return false;
-              },
-
-        accessorFn: (row: RowWithCells) => {
-          const cell = row.cells.find((cell) => cell.columnId === col.id);
-
-          if (col.type === "NUMBER") {
-            return cell?.intValue ?? 0;
-          }
-
-          return cell?.textValue ?? "";
-        },
-
-        header: ({ column }) => (
-          <BaseTableHeader
-            column={column}
-            name={col.name}
-            isNumber={col.type === "NUMBER"}
-          />
-        ),
-
-        footer: (props) => props.column.id,
-
-        cell: (props) => {
-          const isSorted = props.column.getIsSorted();
-          const columnIndex = props.column.getIndex();
-          const initialValue = props.getValue();
-
-          return (
-            <BaseTableCell
-              table={props.table}
-              rowId={props.row.original.id}
-              initialValue={initialValue}
-              isSorted={isSorted}
-              columnIndex={columnIndex}
-              query={query}
-              isSearching={isSearching}
-              isNumber={col.type === "NUMBER"}
-              disabled={col.disabled}
-            />
-          );
-        },
-      })),
+    () => getColumns({ columns, query, isSearching }),
     [columns, query, isSearching],
   );
 
   // Row data
-
   const {
     data: infiniteRowsData,
     fetchNextPage,

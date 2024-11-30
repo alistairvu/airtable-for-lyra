@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from "react";
-import { TableInput } from "../ui/table-input";
+import { TableInput } from "../../ui/table-input";
 import {
   type SortDirection,
   type Table as TanstackTable,

@@ -1,6 +1,6 @@
 import { type Column } from "@tanstack/react-table";
 import { type RowWithCells } from "~/@types";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import {
   ArrowDown01,
   ArrowDown10,
@@ -10,15 +10,15 @@ import {
   PencilIcon,
   X,
 } from "lucide-react";
-import { NumberColumnIcon } from "../icons/number-column-icon";
-import { TextColumnIcon } from "../icons/text-column-icon";
+import { NumberColumnIcon } from "../../icons/number-column-icon";
+import { TextColumnIcon } from "../../icons/text-column-icon";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "../../ui/dropdown-menu";
 import { cn } from "~/lib/utils";
 
 type BaseTableHeaderProps = {
