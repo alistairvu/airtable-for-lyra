@@ -6,18 +6,18 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 
-type BaseColumnRenameProps = {
+type BaseColumnEditProps = {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
 
   columnId: string;
 };
 
-export const BaseColumnRename = ({
+export const BaseColumnEdit = ({
   open,
   setOpen,
   columnId,
-}: BaseColumnRenameProps) => {
+}: BaseColumnEditProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>

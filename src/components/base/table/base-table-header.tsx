@@ -20,6 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import { cn } from "~/lib/utils";
+import { useState } from "react";
+import { BaseColumnEdit } from "../actions/base-column-edit";
 
 type BaseTableHeaderProps = {
   column: Column<RowWithCells, string | number>;
@@ -32,8 +34,16 @@ export const BaseTableHeader = ({
   name,
   isNumber,
 }: BaseTableHeaderProps) => {
+  const [editOpen, setEditOpen] = useState(false);
+
   return (
     <DropdownMenu>
+      <BaseColumnEdit
+        open={editOpen}
+        setOpen={setEditOpen}
+        columnId={column.id}
+      />
+
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -61,7 +71,10 @@ export const BaseTableHeader = ({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent>
-        <DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => setEditOpen(true)}
+        >
           <PencilIcon />
           Edit
         </DropdownMenuItem>
