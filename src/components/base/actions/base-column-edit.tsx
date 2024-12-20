@@ -24,7 +24,6 @@ export const BaseColumnEdit = ({
         <DialogHeader>
           <DialogTitle>Rename Column</DialogTitle>
         </DialogHeader>
-        <h1>{columnId}</h1>
       </DialogContent>
     </Dialog>
   );
