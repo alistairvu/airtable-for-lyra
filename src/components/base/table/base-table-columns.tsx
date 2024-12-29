@@ -1,9 +1,5 @@
-import { type ColumnDef } from "@tanstack/react-table";
-import {
-  type ColumnWithDisabled,
-  type IntFilter,
-  type RowWithCells,
-} from "~/@types";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnWithDisabled, IntFilter, RowWithCells } from "~/@types";
 import { BaseTableCell } from "./base-table-cell";
 import { BaseTableHeader } from "./base-table-header";
 
@@ -35,11 +31,11 @@ export const getColumns = ({
                 return true;
               }
 
-              if (mode == "gt") {
+              if (mode === "gt") {
                 return value < (cell.getValue() as number);
               }
 
-              if (mode == "lt") {
+              if (mode === "lt") {
                 return value > (cell.getValue() as number);
               }
 

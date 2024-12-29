@@ -1,7 +1,4 @@
-import {
-  type ColumnFiltersState,
-  type SortingState,
-} from "@tanstack/react-table";
+import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { BaseTable } from "~/components/base/table/base-table";
 import { api } from "~/trpc/server";
 

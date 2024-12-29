@@ -1,19 +1,32 @@
 "use client";
 
+import { faker } from "@faker-js/faker";
+import type { Column, View } from "@prisma/client";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  type RowData,
-  useReactTable,
-  type SortingState,
-  getSortedRowModel,
   type ColumnFiltersState,
-  getFilteredRowModel,
+  type RowData,
+  type SortingState,
+  flexRender,
   functionalUpdate,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  useReactTable,
 } from "@tanstack/react-table";
-import { type View, type Column } from "@prisma/client";
-import { type RowWithCells } from "~/@types";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { getQueryKey } from "@trpc/react-query";
+import { PlusIcon } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { RowWithCells } from "~/@types";
+import { useAddTextColumn } from "~/hooks/use-add-column";
+import { useAddDummyRows } from "~/hooks/use-add-dummy-rows";
+import { useAddRow } from "~/hooks/use-add-row";
+import { useEditIntCell, useEditTextCell } from "~/hooks/use-edit-cell";
+import { TableSidebarContext } from "~/hooks/use-table-sidebar";
+import { cn } from "~/lib/utils";
+import { api } from "~/trpc/react";
 import {
   Table,
   TableBody,
@@ -22,27 +35,8 @@ import {
   TableHeader,
   TableRow,
 } from "../../ui/table";
-import { api } from "~/trpc/react";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { cn } from "~/lib/utils";
-import { PlusIcon } from "lucide-react";
 import { BaseTableActions } from "../headers/base-table-actions";
-import { useEditIntCell, useEditTextCell } from "~/hooks/use-edit-cell";
-import { useAddTextColumn } from "~/hooks/use-add-column";
-import { useAddRow } from "~/hooks/use-add-row";
 import { BaseSidebar } from "../layout/base-sidebar";
-import { TableSidebarContext } from "~/hooks/use-table-sidebar";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
-import { useAddDummyRows } from "~/hooks/use-add-dummy-rows";
-import { faker } from "@faker-js/faker";
 import { getColumns } from "./base-table-columns";
 
 type BaseTableProps = {
@@ -234,7 +228,7 @@ export const BaseTable = ({
     },
 
     getRowId: (originalRow, _index, _parent) => {
-      return "row:" + String(originalRow.index);
+      return `row:${String(originalRow.index)}`;
     },
 
     // Provide our updateData function to our table meta
@@ -276,7 +270,7 @@ export const BaseTable = ({
 
         if (isNumber) {
           editIntCell.mutate({
-            value: parseInt(`${value}`),
+            value: Number.parseInt(`${value}`),
             cellId,
           });
         } else {
@@ -333,7 +327,7 @@ export const BaseTable = ({
   const handleEditQuery = (query: string) => {
     setQuery(query);
     table.setGlobalFilter(query);
-    if (!!table.getRowModel().rows.length) {
+    if (table.getRowModel().rows.length) {
       rowVirtualizer.scrollToIndex?.(0);
     }
   };
@@ -442,6 +436,7 @@ export const BaseTable = ({
                 }}
               >
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  // biome-ignore lint/style/noNonNullAssertion: <explanation>
                   const row = tableRows[virtualRow.index]!;
 
                   return (
@@ -560,7 +555,9 @@ export const BaseTable = ({
             </Table>
 
             <div
-              className={`sticky bottom-0 left-0 z-20 flex h-[24px] w-full items-center justify-start border-t bg-slate-100 pl-2 text-[11px]`}
+              className={
+                "sticky bottom-0 left-0 z-20 flex h-[24px] w-full items-center justify-start border-t bg-slate-100 pl-2 text-[11px]"
+              }
             >
               <span>
                 {rowCount} {rowCount !== 1 ? "rows" : "row"}

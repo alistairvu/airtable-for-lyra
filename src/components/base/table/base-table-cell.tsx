@@ -1,11 +1,11 @@
-import { memo, useCallback, useEffect, useState } from "react";
-import { TableInput } from "../../ui/table-input";
-import {
-  type SortDirection,
-  type Table as TanstackTable,
+import type {
+  SortDirection,
+  Table as TanstackTable,
 } from "@tanstack/react-table";
-import { type RowWithCells } from "~/@types";
+import { memo, useCallback, useEffect, useState } from "react";
+import type { RowWithCells } from "~/@types";
 import { cn } from "~/lib/utils";
+import { TableInput } from "../../ui/table-input";
 
 type BaseTableCellProps = {
   query: string;
@@ -40,7 +40,7 @@ export const BaseTableCell = memo(function BaseTableCell({
 
   const handleBlur = useCallback(() => {
     if (typeof value === "number") {
-      if (!isNaN(value) && value !== initialValue) {
+      if (!Number.isNaN(value) && value !== initialValue) {
         table.options.meta?.updateData?.(rowId, columnIndex, value);
       }
     } else {
@@ -66,7 +66,9 @@ export const BaseTableCell = memo(function BaseTableCell({
         "my-0 truncate rounded-none border-none px-2 shadow-none",
         (isSorted || matchesQuery()) && "bg-[#f4e9e4]",
       )}
-      value={typeof value === "string" ? value : isNaN(value) ? "" : value}
+      value={
+        typeof value === "string" ? value : Number.isNaN(value) ? "" : value
+      }
       onChange={(e) =>
         isNumber ? setValue(e.target.valueAsNumber) : setValue(e.target.value)
       }
