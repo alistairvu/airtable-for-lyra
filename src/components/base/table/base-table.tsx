@@ -186,7 +186,25 @@ export const BaseTable = ({
   });
 
   // SECTION: Mutation for saving the sorting view
-  const setViewColumnFilters = api.view.setColumnFilters.useMutation();
+  const setViewColumnFilters = api.view.setColumnFilters.useMutation({
+    onMutate: () => {
+      queryClient.removeQueries({
+        queryKey: getQueryKey(
+          api.table.getInfiniteRows,
+          { tableId, limit: FETCH_LIMIT, viewId },
+          "infinite",
+        ),
+      });
+    },
+
+    onSettled: async () => {
+      await utils.table.getInfiniteRows.invalidate({
+        tableId,
+        limit: FETCH_LIMIT,
+        viewId,
+      });
+    },
+  });
 
   // Column definitions
 
@@ -221,6 +239,7 @@ export const BaseTable = ({
     globalFilterFn: "includesString",
 
     manualSorting: true,
+    manualFiltering: true,
 
     state: {
       sorting,

@@ -1,7 +1,7 @@
-import { type Table, type PrismaClient, type Column } from "@prisma/client";
-import { type SortingState } from "@tanstack/react-table";
+import type { Column, PrismaClient, Table } from "@prisma/client";
+import type { SortingState } from "@tanstack/react-table";
 import { TRPCError } from "@trpc/server";
-import { type IntFilter, type ViewColumnFilter } from "~/@types";
+import type { IntFilter, ViewColumnFilter } from "~/@types";
 
 type AddDummyParams = {
   name: string;
@@ -115,9 +115,7 @@ export class TableController {
                   equals: "",
                 }
               : {
-                  NOT: {
-                    equals: "",
-                  },
+                  not: "",
                 },
           };
         }
@@ -129,7 +127,7 @@ export class TableController {
             return {
               columnId: f.id,
               intValue: {
-                gt: intFilter.value,
+                gt: intFilter.value ?? undefined,
               },
             };
           }
@@ -138,7 +136,7 @@ export class TableController {
             return {
               columnId: f.id,
               intValue: {
-                gt: intFilter.value,
+                gt: intFilter.value ?? undefined,
               },
             };
           }
@@ -148,17 +146,7 @@ export class TableController {
       })
       .filter((x) => x !== undefined);
 
-    const where = {
-      row: {
-        cells: {
-          some: {
-            AND: whereFilters,
-          },
-        },
-      },
-    };
-
-    return where;
+    return whereFilters;
   }
 
   /**
@@ -198,7 +186,10 @@ export class TableController {
       // First thing
       if (view !== undefined) {
         // Has sorting state
-        if (view?.sorting) {
+        if (
+          view?.sorting &&
+          (view.sorting as unknown as SortingState).length > 0
+        ) {
           const parsedSorting = view.sorting as unknown as SortingState;
 
           // One column at a time
@@ -227,7 +218,13 @@ export class TableController {
               skip: cursor,
               where: {
                 columnId: id,
-                // row: rowWhere ? rowWhere.row : undefined,
+                row: {
+                  cells: {
+                    some: {
+                      AND: rowWhere,
+                    },
+                  },
+                },
               },
               select: {
                 rowId: true,
@@ -261,6 +258,35 @@ export class TableController {
 
             return { items, nextCursor };
           }
+        } else if (view?.columnFilters) {
+          const columns = await this.getColumns(tableId, userId);
+
+          const rowWhere = this.generateWhereClause(
+            view.columnFilters as ViewColumnFilter[],
+            columns,
+          );
+
+          const items = await this.db.row.findMany({
+            take: limit,
+            skip: cursor,
+            where: {
+              cells: {
+                some: {
+                  AND: rowWhere,
+                },
+              },
+            },
+            include: {
+              cells: true,
+            },
+            orderBy: {
+              index: "asc",
+            },
+          });
+
+          const nextCursor = cursor + items.length;
+
+          return { items, nextCursor };
         }
       }
     }
@@ -410,8 +436,6 @@ export class TableController {
       textValue: "",
     }));
 
-    console.log({ cellData });
-
     await this.db.cell.createMany({
       data: cellData,
     });
@@ -475,8 +499,6 @@ export class TableController {
       },
     });
 
-    console.log({ newRow });
-
     return newRow;
   }
 
@@ -531,6 +553,7 @@ export class TableController {
 
     const cellData = rows.flatMap((row, index) => {
       return columns.map((column) => {
+        // biome-ignore lint/style/noNonNullAssertion: <explanation>
         const { name, age } = dummyRows[index]!;
 
         if (column.name === "Name") {

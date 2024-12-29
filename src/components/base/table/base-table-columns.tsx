@@ -1,7 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { ColumnWithDisabled, IntFilter, RowWithCells } from "~/@types";
 import { BaseTableCell } from "./base-table-cell";
-import { BaseTableHeader } from "./base-table-header";
+import { BaseTableColumnHeader } from "./base-table-column-header";
 
 type GetColumnsParams = {
   columns: ColumnWithDisabled[];
@@ -69,7 +69,7 @@ export const getColumns = ({
     },
 
     header: ({ column }) => (
-      <BaseTableHeader
+      <BaseTableColumnHeader
         column={column}
         name={col.name}
         isNumber={col.type === "NUMBER"}
