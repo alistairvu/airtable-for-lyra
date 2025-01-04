@@ -91,6 +91,7 @@ export const tableRouter = createTRPCRouter({
 
         sorting: sortingStateSchema,
         columnFilters: columnFiltersSchema,
+        query: z.string().nullish(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -98,7 +99,7 @@ export const tableRouter = createTRPCRouter({
 
       const limit = input.limit ?? 1000;
       const cursor = input.cursor ?? 0;
-      const { tableId, sorting, columnFilters } = input;
+      const { tableId, sorting, columnFilters, query } = input;
 
       return controller.getInfiniteRows({
         tableId,
@@ -107,6 +108,7 @@ export const tableRouter = createTRPCRouter({
         userId: ctx.session.user.id,
         sorting,
         columnFilters,
+        query,
       });
     }),
 

@@ -16,6 +16,7 @@ import {
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { getQueryKey } from "@trpc/react-query";
+import { useDebounce } from "@uidotdev/usehooks";
 import { PlusIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
@@ -25,6 +26,7 @@ import { useAddDummyRows } from "~/hooks/use-add-dummy-rows";
 import { useAddRow } from "~/hooks/use-add-row";
 import { useColumnFilters } from "~/hooks/use-column-filters";
 import { useEditIntCell, useEditTextCell } from "~/hooks/use-edit-cell";
+import { useSearchQuery } from "~/hooks/use-search-query";
 import { useSorting } from "~/hooks/use-sorting";
 import { TableSidebarContext } from "~/hooks/use-table-sidebar";
 import { cn } from "~/lib/utils";
@@ -90,7 +92,14 @@ export const BaseTable = ({
 
   // SECTION: State related to search
   const [isSearching, setIsSearching] = useState(false);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useSearchQuery();
+  const debouncedQuery = useDebounce(query, 300);
+
+  useEffect(() => {
+    if (table.getRowModel().rows.length) {
+      rowVirtualizer.scrollToIndex?.(0);
+    }
+  }, [debouncedQuery]);
 
   // Loading in data
   const rowCountQuery = api.table.countRows.useQuery(tableId, {
@@ -105,8 +114,8 @@ export const BaseTable = ({
   });
 
   const columnDef: ColumnDef<RowWithCells, string | number>[] = useMemo(
-    () => getColumns({ columns, query, isSearching }),
-    [columns, query, isSearching],
+    () => getColumns({ columns, isSearching }),
+    [columns, isSearching],
   );
 
   // Row data
@@ -115,7 +124,13 @@ export const BaseTable = ({
     fetchNextPage,
     isFetching,
   } = api.table.getInfiniteRows.useInfiniteQuery(
-    { tableId, limit: FETCH_LIMIT, sorting, columnFilters },
+    {
+      tableId,
+      limit: FETCH_LIMIT,
+      sorting,
+      columnFilters,
+      query: debouncedQuery,
+    },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
@@ -351,15 +366,6 @@ export const BaseTable = ({
     void fetchMoreOnBottomReached(tableContainerRef.current);
   }, [fetchMoreOnBottomReached]);
 
-  // SECTION: Handle global filter
-  const handleEditQuery = (query: string) => {
-    setQuery(query);
-    table.setGlobalFilter(query);
-    if (table.getRowModel().rows.length) {
-      rowVirtualizer.scrollToIndex?.(0);
-    }
-  };
-
   return (
     <TableSidebarContext.Provider
       value={{ open: sidebarOpen, setIsOpen: setSidebarOpen }}
@@ -368,8 +374,6 @@ export const BaseTable = ({
         <BaseTableActions
           isSearching={isSearching}
           setIsSearching={setIsSearching}
-          query={query}
-          handleEditQuery={handleEditQuery}
           columns={columns}
           viewId={viewId}
           tableId={tableId}

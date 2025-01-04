@@ -4,11 +4,11 @@ import type {
 } from "@tanstack/react-table";
 import { memo, useCallback, useEffect, useState } from "react";
 import type { RowWithCells } from "~/@types";
+import { useSearchQuery } from "~/hooks/use-search-query";
 import { cn } from "~/lib/utils";
 import { TableInput } from "../../ui/table-input";
 
 type BaseTableCellProps = {
-  query: string;
   isSearching?: boolean;
   isNumber?: boolean;
   table: TanstackTable<RowWithCells>;
@@ -25,12 +25,12 @@ export const BaseTableCell = memo(function BaseTableCell({
   rowId,
   columnIndex,
   table,
-  query,
   isNumber,
   isSorted,
   disabled,
 }: BaseTableCellProps) {
   const [value, setValue] = useState(initialValue ?? "");
+  const [query] = useSearchQuery();
 
   useEffect(() => {
     if (initialValue) {

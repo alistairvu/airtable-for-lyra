@@ -5,13 +5,11 @@ import { BaseTableColumnHeader } from "./base-table-column-header";
 
 type GetColumnsParams = {
   columns: ColumnWithDisabled[];
-  query: string;
   isSearching: boolean;
 };
 
 export const getColumns = ({
   columns,
-  query,
   isSearching,
 }: GetColumnsParams): ColumnDef<RowWithCells, string | number>[] => {
   return columns.map((col) => ({
@@ -90,7 +88,6 @@ export const getColumns = ({
           initialValue={initialValue}
           isSorted={isSorted}
           columnIndex={columnIndex}
-          query={query}
           isSearching={isSearching}
           isNumber={col.type === "NUMBER"}
           disabled={col.disabled}

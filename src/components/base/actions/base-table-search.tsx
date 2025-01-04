@@ -1,33 +1,31 @@
 import { Search } from "lucide-react";
+import { type Dispatch, type SetStateAction } from "react";
 import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { Input } from "~/components/ui/input";
-import { type Dispatch, type SetStateAction } from "react";
+import { useSearchQuery } from "~/hooks/use-search-query";
 
 type BaseTableSearchProps = {
   isSearching: boolean;
   setIsSearching: Dispatch<SetStateAction<boolean>>;
-
-  query: string;
-  handleEditQuery: (query: string) => void;
 };
 
 export const BaseTableSearch = ({
   isSearching,
   setIsSearching,
-  query,
-  handleEditQuery,
 }: BaseTableSearchProps) => {
+  const [query, setQuery] = useSearchQuery();
+
   return (
     <Popover
       open={isSearching}
       onOpenChange={(open) => {
         setIsSearching(open);
-        handleEditQuery("");
+        setQuery("");
       }}
     >
       <PopoverTrigger asChild>
@@ -41,7 +39,7 @@ export const BaseTableSearch = ({
           type="text"
           placeholder="Find in view"
           value={query}
-          onChange={(e) => handleEditQuery(e.target.value)}
+          onChange={(e) => setQuery(e.target.value)}
         />
       </PopoverContent>
     </Popover>

@@ -12,6 +12,29 @@ type AddDummyParams = {
   age: number;
 };
 
+type WhereFilterType =
+  | {
+      columnId?: string;
+      textValue: { contains: string; mode: "insensitive" };
+    }
+  | {
+      columnId: string;
+      textValue: { equals: string } | { not: string };
+    }
+  | {
+      columnId: string;
+      intValue: {
+        gt?: number;
+        lt?: number;
+      };
+    };
+
+type CellFilterType = {
+  cells: {
+    some: WhereFilterType;
+  };
+};
+
 /**
  * Handles logic related to the table
  */
@@ -94,16 +117,20 @@ export class TableController {
     });
   }
 
-  generateWhereClause(filters: ViewColumnFilter[] | null, columns: Column[]) {
+  generateWhereClause(
+    filters: ViewColumnFilter[] | null,
+    columns: Column[],
+    query?: string | null,
+  ) {
     if (filters === null) {
-      return undefined;
+      return [];
     }
 
     if (filters.length === 0) {
-      return undefined;
+      return [];
     }
 
-    const whereFilters = filters
+    const whereFilters: CellFilterType[] = filters
       .map((f) => {
         const column = columns.find((c) => c.id === f.id);
 
@@ -113,14 +140,18 @@ export class TableController {
 
         if (column.type === "TEXT") {
           return {
-            columnId: f.id,
-            textValue: f.value
-              ? {
-                  equals: "",
-                }
-              : {
-                  not: "",
-                },
+            cells: {
+              some: {
+                columnId: f.id,
+                textValue: f.value
+                  ? {
+                      equals: "",
+                    }
+                  : {
+                      not: "",
+                    },
+              },
+            },
           };
         }
 
@@ -129,18 +160,26 @@ export class TableController {
 
           if (intFilter.mode === "gt") {
             return {
-              columnId: f.id,
-              intValue: {
-                gt: intFilter.value ?? undefined,
+              cells: {
+                some: {
+                  columnId: f.id,
+                  intValue: {
+                    gt: intFilter.value ?? undefined,
+                  },
+                },
               },
             };
           }
 
           if (intFilter.mode === "lt") {
             return {
-              columnId: f.id,
-              intValue: {
-                lt: intFilter.value ?? undefined,
+              cells: {
+                some: {
+                  columnId: f.id,
+                  intValue: {
+                    lt: intFilter.value ?? undefined,
+                  },
+                },
               },
             };
           }
@@ -150,13 +189,26 @@ export class TableController {
       })
       .filter((x) => x !== undefined);
 
+    if (query && query.length > 0) {
+      whereFilters.push({
+        cells: {
+          some: {
+            textValue: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+        },
+      });
+    }
+
     return whereFilters;
   }
 
   /**
    * Retrieves rows from a table with pagination and optional sorting based on a view.
    *
-   * @param tableId - The ID of the table to fetch rows from
+   * @param tableId - The ID of the table to fetch rows  from
    * @param cursor - The pagination cursor indicating where to start fetching rows
    * @param limit - The maximum number of rows to return
    * @param userId - The ID of the user requesting the rows
@@ -177,14 +229,16 @@ export class TableController {
     userId: string;
     sorting: z.infer<typeof sortingStateSchema>;
     columnFilters: z.infer<typeof columnFiltersSchema>;
+    query?: string | null;
   }) {
-    const { tableId, cursor, limit, userId, sorting, columnFilters } = params;
+    const { tableId, cursor, limit, userId, sorting, columnFilters, query } =
+      params;
 
     await this.findBase(tableId, userId);
 
     const columns = await this.getColumns(tableId, userId);
 
-    const rowWhere = this.generateWhereClause(columnFilters, columns);
+    const rowWhere = this.generateWhereClause(columnFilters, columns, query);
 
     // One column at a time
     const sortingObject = sorting[0];
@@ -201,18 +255,51 @@ export class TableController {
       const isText = column?.type === "TEXT";
 
       // Getting the rows we can render
+      let rowWhitelist = null;
+
+      if (query && query.length > 0) {
+        rowWhitelist = await this.db.row.findMany({
+          where: {
+            cells: {
+              some: {
+                textValue: {
+                  contains: query,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+          select: {
+            id: true,
+          },
+        });
+      }
+
+      const rowWhitelistCondition =
+        rowWhitelist === null
+          ? []
+          : [
+              {
+                rowId: {
+                  in: rowWhitelist.map((x) => x.id),
+                },
+              },
+            ];
+
       const rowIds = await this.db.cell.findMany({
         take: limit,
         skip: cursor,
         where: {
-          columnId: id,
-          row: {
-            cells: {
-              some: {
-                AND: rowWhere,
-              },
+          AND: [
+            {
+              columnId: id,
             },
-          },
+            ...rowWhere
+              .filter((x) => x.cells.some.columnId === id)
+              .map((x) => x.cells.some),
+
+            ...rowWhitelistCondition,
+          ],
         },
         select: {
           rowId: true,
@@ -251,12 +338,12 @@ export class TableController {
       take: limit,
       skip: cursor,
       where: {
-        tableId,
-        cells: {
-          some: {
-            AND: rowWhere,
+        AND: [
+          {
+            tableId,
           },
-        },
+          ...rowWhere,
+        ],
       },
       include: {
         cells: true,

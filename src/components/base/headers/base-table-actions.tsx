@@ -27,12 +27,10 @@ type BaseTableActionsProps = {
 
   isSearching: boolean;
   setIsSearching: Dispatch<SetStateAction<boolean>>;
-  query: string;
-  handleEditQuery: (query: string) => void;
 };
 
 export const BaseTableActions = (props: BaseTableActionsProps) => {
-  const { isSearching, setIsSearching, query, handleEditQuery } = props;
+  const { isSearching, setIsSearching } = props;
   const { columns } = props;
   const { viewId, tableId } = props;
 
@@ -94,8 +92,6 @@ export const BaseTableActions = (props: BaseTableActionsProps) => {
         <BaseTableSearch
           isSearching={isSearching}
           setIsSearching={setIsSearching}
-          query={query}
-          handleEditQuery={handleEditQuery}
         />
       </div>
     </div>
