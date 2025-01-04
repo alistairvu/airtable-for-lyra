@@ -2,6 +2,7 @@ import type {
   SortDirection,
   Table as TanstackTable,
 } from "@tanstack/react-table";
+import { useDebounce } from "@uidotdev/usehooks";
 import { memo, useCallback, useEffect, useState } from "react";
 import type { RowWithCells } from "~/@types";
 import { useSearchQuery } from "~/hooks/use-search-query";
@@ -31,6 +32,7 @@ export const BaseTableCell = memo(function BaseTableCell({
 }: BaseTableCellProps) {
   const [value, setValue] = useState(initialValue ?? "");
   const [query] = useSearchQuery();
+  const debouncedQuery = useDebounce(query, 300);
 
   useEffect(() => {
     if (initialValue) {
@@ -51,11 +53,11 @@ export const BaseTableCell = memo(function BaseTableCell({
   }, [value, initialValue, columnIndex, rowId, table.options.meta]);
 
   const matchesQuery = () => {
-    if (query === "") {
+    if (debouncedQuery === "") {
       return false;
     }
 
-    const searchRegex = new RegExp(`${query}`, "ig");
+    const searchRegex = new RegExp(`${debouncedQuery}`, "ig");
 
     return searchRegex.test(String(value));
   };

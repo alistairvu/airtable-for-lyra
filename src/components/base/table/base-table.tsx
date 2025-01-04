@@ -92,7 +92,7 @@ export const BaseTable = ({
 
   // SECTION: State related to search
   const [isSearching, setIsSearching] = useState(false);
-  const [query, setQuery] = useSearchQuery();
+  const [query, _setQuery] = useSearchQuery();
   const debouncedQuery = useDebounce(query, 300);
 
   useEffect(() => {
