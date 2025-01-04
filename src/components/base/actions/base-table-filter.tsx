@@ -7,8 +7,8 @@ import {
 } from "@tanstack/react-table";
 import { getQueryKey } from "@trpc/react-query";
 import { ListFilter, Plus, Trash } from "lucide-react";
-import { createContext, use, type Dispatch, type SetStateAction } from "react";
-import { z } from "zod";
+import { createContext, use } from "react";
+import { type z } from "zod";
 import type { IntFilter } from "~/@types";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -66,7 +66,7 @@ const BaseTableTextFilter = ({ column, tableId }: BaseTableTextFilterProps) => {
       queryClient.removeQueries({
         queryKey: getQueryKey(
           api.table.getInfiniteRows,
-          { tableId, limit: FETCH_LIMIT, viewId },
+          { tableId, limit: FETCH_LIMIT },
           "infinite",
         ),
       });
@@ -76,7 +76,6 @@ const BaseTableTextFilter = ({ column, tableId }: BaseTableTextFilterProps) => {
       await utils.table.getInfiniteRows.invalidate({
         tableId,
         limit: FETCH_LIMIT,
-        viewId,
       });
     },
   });
@@ -112,7 +111,7 @@ const BaseTableTextFilter = ({ column, tableId }: BaseTableTextFilterProps) => {
     const parsedFilters = columnFiltersSchema.safeParse(rawFilters);
 
     if (parsedFilters.success) {
-      setColumnFilters(parsedFilters.data);
+      void setColumnFilters(parsedFilters.data);
       setViewColumnFilters.mutate({
         viewId,
         columnFilters: parsedFilters.data,
@@ -237,7 +236,7 @@ const BaseTableIntFilter = ({ column, tableId }: BaseTableIntFilterProps) => {
       queryClient.removeQueries({
         queryKey: getQueryKey(
           api.table.getInfiniteRows,
-          { tableId, limit: FETCH_LIMIT, viewId },
+          { tableId, limit: FETCH_LIMIT },
           "infinite",
         ),
       });
@@ -247,7 +246,6 @@ const BaseTableIntFilter = ({ column, tableId }: BaseTableIntFilterProps) => {
       await utils.table.getInfiniteRows.invalidate({
         tableId,
         limit: FETCH_LIMIT,
-        viewId,
       });
     },
   });
@@ -285,7 +283,7 @@ const BaseTableIntFilter = ({ column, tableId }: BaseTableIntFilterProps) => {
     const parsedFilters = columnFiltersSchema.safeParse(rawFilters);
 
     if (parsedFilters.success) {
-      setColumnFilters(parsedFilters.data);
+      void setColumnFilters(parsedFilters.data);
       setViewColumnFilters.mutate({
         viewId,
         columnFilters: parsedFilters.data,
@@ -484,7 +482,7 @@ export const BaseTableFilter = ({
       ];
     };
 
-    setColumnFilters(calculateColumnFilters);
+    void setColumnFilters(calculateColumnFilters);
     setViewColumnFilters.mutate({
       viewId,
       columnFilters: calculateColumnFilters(columnFilters),

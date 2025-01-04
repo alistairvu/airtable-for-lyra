@@ -12,8 +12,8 @@ type BaseTableSortProps = {
   columns: Column[];
 };
 
-export const BaseTableSort = ({ columns }: BaseTableSortProps) => {
-  const [sorting, _setSorting] = useSorting();
+export const BaseTableSort = (_props: BaseTableSortProps) => {
+  const [sorting] = useSorting();
 
   return (
     <Popover>

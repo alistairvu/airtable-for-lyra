@@ -1,10 +1,10 @@
 "use client";
 
+import { CircleHelp, Menu, Search } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { SidebarTrigger, useSidebar } from "../ui/sidebar";
-import { Button } from "../ui/button";
 import { AirtableTextLogoIcon } from "../icons/airtable-text-logo-icon";
-import { Bell, CircleHelp, Menu, Search } from "lucide-react";
+import { Button } from "../ui/button";
+import { useSidebar } from "../ui/sidebar";
 
 export const DashboardHeader = () => {
   const { toggleSidebar } = useSidebar();

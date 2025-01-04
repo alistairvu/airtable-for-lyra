@@ -1,5 +1,5 @@
 import { parseAsJson, useQueryState } from "nuqs";
-import { z } from "zod";
+import { type z } from "zod";
 import { columnFiltersSchema } from "~/schemas/sorting.schema";
 
 export const useColumnFilters = (
@@ -7,5 +7,7 @@ export const useColumnFilters = (
 ) =>
   useQueryState(
     "filters",
-    parseAsJson(columnFiltersSchema.parse).withDefault(defaultFilters),
+    parseAsJson((value) => columnFiltersSchema.parse(value)).withDefault(
+      defaultFilters,
+    ),
   );

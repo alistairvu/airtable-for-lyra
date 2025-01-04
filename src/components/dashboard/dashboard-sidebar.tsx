@@ -1,10 +1,8 @@
 "use client";
 
 import {
-  Book,
   BookOpen,
   ChevronDown,
-  Home,
   PlusIcon,
   Share,
   ShoppingBag,
@@ -25,21 +23,12 @@ import {
   SidebarSeparator,
 } from "~/components/ui/sidebar";
 import { api } from "~/trpc/react";
+import { Button } from "../ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../ui/collapsible";
-import { Button } from "../ui/button";
-
-// Menu items.
-const items = [
-  {
-    title: "Home",
-    url: "#",
-    icon: Home,
-  },
-];
 
 export function DashboardSidebar() {
   const router = useRouter();

@@ -25,7 +25,7 @@ export const BaseTableSearch = ({
       open={isSearching}
       onOpenChange={(open) => {
         setIsSearching(open);
-        setQuery("");
+        void setQuery("");
       }}
     >
       <PopoverTrigger asChild>

@@ -13,11 +13,7 @@ type BaseColumnEditProps = {
   columnId: string;
 };
 
-export const BaseColumnEdit = ({
-  open,
-  setOpen,
-  columnId,
-}: BaseColumnEditProps) => {
+export const BaseColumnEdit = ({ open, setOpen }: BaseColumnEditProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>

@@ -1,10 +1,10 @@
 import type { Column, PrismaClient, Table } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
+import { type z } from "zod";
 import type { IntFilter, ViewColumnFilter } from "~/@types";
 import {
-  columnFiltersSchema,
-  sortingStateSchema,
+  type columnFiltersSchema,
+  type sortingStateSchema,
 } from "~/schemas/sorting.schema";
 
 type AddDummyParams = {

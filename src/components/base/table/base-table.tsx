@@ -19,7 +19,7 @@ import { getQueryKey } from "@trpc/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import { PlusIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { z } from "zod";
+import { type z } from "zod";
 import type { RowWithCells } from "~/@types";
 import { useAddTextColumn } from "~/hooks/use-add-column";
 import { useAddDummyRows } from "~/hooks/use-add-dummy-rows";
@@ -92,14 +92,8 @@ export const BaseTable = ({
 
   // SECTION: State related to search
   const [isSearching, setIsSearching] = useState(false);
-  const [query, _setQuery] = useSearchQuery();
+  const [query] = useSearchQuery();
   const debouncedQuery = useDebounce(query, 300);
-
-  useEffect(() => {
-    if (table.getRowModel().rows.length) {
-      rowVirtualizer.scrollToIndex?.(0);
-    }
-  }, [debouncedQuery]);
 
   // Loading in data
   const rowCountQuery = api.table.countRows.useQuery(tableId, {
@@ -238,7 +232,7 @@ export const BaseTable = ({
 
     onSortingChange: (updater) => {
       const newSorting = functionalUpdate(updater, sorting);
-      setSorting(updater);
+      void setSorting(updater);
       setViewSorting.mutate({
         viewId,
         sorting: newSorting,
@@ -251,7 +245,7 @@ export const BaseTable = ({
       const newFilters = columnFiltersSchema.safeParse(rawFilters);
 
       if (newFilters.success) {
-        setColumnFilters(newFilters.data);
+        void setColumnFilters(newFilters.data);
         setViewColumnFilters.mutate({
           viewId,
           columnFilters: newFilters.data,
@@ -343,6 +337,12 @@ export const BaseTable = ({
         : undefined,
     overscan: 10,
   });
+
+  useEffect(() => {
+    if (table.getRowModel().rows.length) {
+      rowVirtualizer.scrollToIndex?.(0);
+    }
+  }, [debouncedQuery, table, rowVirtualizer]);
 
   // Setting up infinite scrolling
   const fetchMoreOnBottomReached = useCallback(
