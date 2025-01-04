@@ -1,5 +1,8 @@
-import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { BaseTable } from "~/components/base/table/base-table";
+import {
+  columnFiltersSchema,
+  sortingStateSchema,
+} from "~/schemas/sorting.schema";
 import { api } from "~/trpc/server";
 
 type BaseProps = {
@@ -23,15 +26,22 @@ export default async function TablePage({
 
   const allViews = await api.view.getViews({ tableId });
 
+  const parsedInitialSorting = sortingStateSchema.safeParse(view?.sorting);
+  const parsedInitialFilters = columnFiltersSchema.safeParse(
+    view?.columnFilters,
+  );
+
   return (
     <BaseTable
       tableId={tableId}
       initialColumns={columns}
       initialRowCount={rowCount}
       viewId={viewId}
-      initialSorting={(view?.sorting ?? ([] as unknown)) as SortingState}
+      initialSorting={
+        parsedInitialSorting.success ? parsedInitialSorting.data : []
+      }
       initialColumnFilters={
-        (view?.columnFilters ?? ([] as unknown)) as ColumnFiltersState
+        parsedInitialFilters.success ? parsedInitialFilters.data : []
       }
       initialViews={allViews}
     />

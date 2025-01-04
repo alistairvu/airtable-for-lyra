@@ -1,33 +1,37 @@
+import type { Column } from "@prisma/client";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  functionalUpdate,
+  type ColumnFilter,
+  type ColumnFiltersState,
+} from "@tanstack/react-table";
+import { getQueryKey } from "@trpc/react-query";
 import { ListFilter, Plus, Trash } from "lucide-react";
+import { createContext, use, type Dispatch, type SetStateAction } from "react";
+import { z } from "zod";
+import type { IntFilter } from "~/@types";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { Button } from "~/components/ui/button";
-import {
-  type ColumnFilter,
-  type ColumnFiltersState,
-} from "@tanstack/react-table";
-import { createContext, type Dispatch, type SetStateAction, use } from "react";
-import { type Column } from "@prisma/client";
 import {
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "~/components/ui/select";
-import { type IntFilter } from "~/@types";
-import { Input } from "~/components/ui/input";
+import { useColumnFilters } from "~/hooks/use-column-filters";
+import { columnFiltersSchema } from "~/schemas/sorting.schema";
 import { api } from "~/trpc/react";
 
 type BaseTableFilterProps = {
-  columnFilters: ColumnFiltersState;
-  setColumnFilters: Dispatch<SetStateAction<ColumnFiltersState>>;
-
   columns: Column[];
   viewId: string;
+  tableId: string;
 };
 
 // TODO: Handle saving of context
@@ -42,6 +46,7 @@ const useFilterContext = () => {
 
 type BaseTableTextFilterProps = {
   column: Column;
+  tableId: string;
 };
 
 /**
@@ -49,15 +54,38 @@ type BaseTableTextFilterProps = {
  *
  * @param param0
  */
-const BaseTableTextFilter = ({ column }: BaseTableTextFilterProps) => {
+const BaseTableTextFilter = ({ column, tableId }: BaseTableTextFilterProps) => {
   const filterContext = useFilterContext();
-  const setViewColumnFilters = api.view.setColumnFilters.useMutation();
+  const queryClient = useQueryClient();
+  const FETCH_LIMIT = 250;
+  const utils = api.useUtils();
+  const [columnFilters, setColumnFilters] = useColumnFilters();
+
+  const setViewColumnFilters = api.view.setColumnFilters.useMutation({
+    onMutate: () => {
+      queryClient.removeQueries({
+        queryKey: getQueryKey(
+          api.table.getInfiniteRows,
+          { tableId, limit: FETCH_LIMIT, viewId },
+          "infinite",
+        ),
+      });
+    },
+
+    onSettled: async () => {
+      await utils.table.getInfiniteRows.invalidate({
+        tableId,
+        limit: FETCH_LIMIT,
+        viewId,
+      });
+    },
+  });
 
   if (filterContext === null) {
     return null;
   }
 
-  const { columnFilters, setColumnFilters, columns, viewId } = filterContext;
+  const { columns, viewId } = filterContext;
 
   const matchingFilter = columnFilters.find(
     (filters) => filters.id === column.id,
@@ -80,11 +108,16 @@ const BaseTableTextFilter = ({ column }: BaseTableTextFilterProps) => {
   const applyUpdater = (
     updater: (prev: ColumnFiltersState) => ColumnFilter[],
   ) => {
-    setColumnFilters(updater);
-    setViewColumnFilters.mutate({
-      viewId,
-      columnFilters: updater(columnFilters),
-    });
+    const rawFilters = functionalUpdate(updater, columnFilters);
+    const parsedFilters = columnFiltersSchema.safeParse(rawFilters);
+
+    if (parsedFilters.success) {
+      setColumnFilters(parsedFilters.data);
+      setViewColumnFilters.mutate({
+        viewId,
+        columnFilters: parsedFilters.data,
+      });
+    }
   };
 
   const changeSortColumn = (newColumnId: string) => {
@@ -184,6 +217,7 @@ const BaseTableTextFilter = ({ column }: BaseTableTextFilterProps) => {
 
 type BaseTableIntFilterProps = {
   column: Column;
+  tableId: string;
 };
 
 /**
@@ -191,15 +225,38 @@ type BaseTableIntFilterProps = {
  *
  * @param param0
  */
-const BaseTableIntFilter = ({ column }: BaseTableIntFilterProps) => {
+const BaseTableIntFilter = ({ column, tableId }: BaseTableIntFilterProps) => {
   const filterContext = useFilterContext();
-  const setViewColumnFilters = api.view.setColumnFilters.useMutation();
+  const queryClient = useQueryClient();
+  const FETCH_LIMIT = 250;
+  const utils = api.useUtils();
+  const [columnFilters, setColumnFilters] = useColumnFilters();
+
+  const setViewColumnFilters = api.view.setColumnFilters.useMutation({
+    onMutate: () => {
+      queryClient.removeQueries({
+        queryKey: getQueryKey(
+          api.table.getInfiniteRows,
+          { tableId, limit: FETCH_LIMIT, viewId },
+          "infinite",
+        ),
+      });
+    },
+
+    onSettled: async () => {
+      await utils.table.getInfiniteRows.invalidate({
+        tableId,
+        limit: FETCH_LIMIT,
+        viewId,
+      });
+    },
+  });
 
   if (filterContext === null) {
     return null;
   }
 
-  const { columnFilters, setColumnFilters, columns, viewId } = filterContext;
+  const { columns, viewId } = filterContext;
 
   const matchingFilter = columnFilters.find(
     (filters) => filters.id === column.id,
@@ -224,11 +281,16 @@ const BaseTableIntFilter = ({ column }: BaseTableIntFilterProps) => {
   const applyUpdater = (
     updater: (prev: ColumnFiltersState) => ColumnFilter[],
   ) => {
-    setColumnFilters(updater);
-    setViewColumnFilters.mutate({
-      viewId,
-      columnFilters: updater(columnFilters),
-    });
+    const rawFilters = functionalUpdate(updater, columnFilters);
+    const parsedFilters = columnFiltersSchema.safeParse(rawFilters);
+
+    if (parsedFilters.success) {
+      setColumnFilters(parsedFilters.data);
+      setViewColumnFilters.mutate({
+        viewId,
+        columnFilters: parsedFilters.data,
+      });
+    }
   };
 
   /**
@@ -360,7 +422,9 @@ const BaseTableIntFilter = ({ column }: BaseTableIntFilterProps) => {
         value={filterValue.value ?? ""}
         onChange={(e) =>
           setValue(
-            isNaN(e.target.valueAsNumber) ? null : e.target.valueAsNumber,
+            Number.isNaN(e.target.valueAsNumber)
+              ? null
+              : e.target.valueAsNumber,
           )
         }
       />
@@ -387,11 +451,11 @@ const BaseTableIntFilter = ({ column }: BaseTableIntFilterProps) => {
  * Users can add new conditions if there are unused columns available.
  */
 export const BaseTableFilter = ({
-  columnFilters,
-  setColumnFilters,
   columns,
   viewId,
+  tableId,
 }: BaseTableFilterProps) => {
+  const [columnFilters, setColumnFilters] = useColumnFilters();
   // Handle filter saving mutation
   const setViewColumnFilters = api.view.setColumnFilters.useMutation();
 
@@ -402,7 +466,9 @@ export const BaseTableFilter = ({
       return;
     }
 
-    const calculateColumnFilters = (prev: ColumnFiltersState) => {
+    const calculateColumnFilters = (
+      prev: z.infer<typeof columnFiltersSchema>,
+    ) => {
       return [
         ...prev,
         {
@@ -411,7 +477,7 @@ export const BaseTableFilter = ({
             conditionColumn.type === "TEXT"
               ? false
               : {
-                  mode: "lt",
+                  mode: "lt" as const,
                   value: null,
                 },
         },
@@ -437,19 +503,29 @@ export const BaseTableFilter = ({
       <PopoverContent className="w-[360px]">
         <pre>{JSON.stringify(columnFilters, null, 2)}</pre>
 
-        <BaseTableFilterContext.Provider
-          value={{ columnFilters, setColumnFilters, columns, viewId }}
-        >
+        <BaseTableFilterContext.Provider value={{ columns, viewId, tableId }}>
           <div className="flex flex-col gap-2">
             {columnFilters.map((filter) => {
               const column = columns.find((col) => col.id === filter.id);
 
               if (column?.type === "TEXT") {
-                return <BaseTableTextFilter key={filter.id} column={column} />;
+                return (
+                  <BaseTableTextFilter
+                    tableId={tableId}
+                    key={filter.id}
+                    column={column}
+                  />
+                );
               }
 
               if (column?.type === "NUMBER") {
-                return <BaseTableIntFilter key={filter.id} column={column} />;
+                return (
+                  <BaseTableIntFilter
+                    tableId={tableId}
+                    key={filter.id}
+                    column={column}
+                  />
+                );
               }
 
               return null;

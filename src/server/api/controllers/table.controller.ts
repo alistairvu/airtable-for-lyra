@@ -1,7 +1,11 @@
 import type { Column, PrismaClient, Table } from "@prisma/client";
-import type { SortingState } from "@tanstack/react-table";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 import type { IntFilter, ViewColumnFilter } from "~/@types";
+import {
+  columnFiltersSchema,
+  sortingStateSchema,
+} from "~/schemas/sorting.schema";
 
 type AddDummyParams = {
   name: string;
@@ -136,7 +140,7 @@ export class TableController {
             return {
               columnId: f.id,
               intValue: {
-                gt: intFilter.value ?? undefined,
+                lt: intFilter.value ?? undefined,
               },
             };
           }
@@ -166,137 +170,93 @@ export class TableController {
    * according to the view's preferences. Otherwise, rows are sorted by their index
    * in ascending order.
    */
-  async getInfiniteRows(
-    tableId: string,
-    cursor: number,
-    limit: number,
-    userId: string,
-    viewId?: string,
-  ) {
+  async getInfiniteRows(params: {
+    tableId: string;
+    cursor: number;
+    limit: number;
+    userId: string;
+    sorting: z.infer<typeof sortingStateSchema>;
+    columnFilters: z.infer<typeof columnFiltersSchema>;
+  }) {
+    const { tableId, cursor, limit, userId, sorting, columnFilters } = params;
+
     await this.findBase(tableId, userId);
 
-    // Handling different viewId
-    if (viewId) {
-      const view = await this.db.view.findUnique({
+    const columns = await this.getColumns(tableId, userId);
+
+    const rowWhere = this.generateWhereClause(columnFilters, columns);
+
+    // One column at a time
+    const sortingObject = sorting[0];
+
+    if (sortingObject !== undefined) {
+      const { id, desc } = sortingObject;
+
+      const column = await this.db.column.findUnique({
         where: {
-          id: viewId,
+          id,
         },
       });
 
-      // First thing
-      if (view !== undefined) {
-        // Has sorting state
-        if (
-          view?.sorting &&
-          (view.sorting as unknown as SortingState).length > 0
-        ) {
-          const parsedSorting = view.sorting as unknown as SortingState;
+      const isText = column?.type === "TEXT";
 
-          // One column at a time
-          const sortingObject = parsedSorting[0];
-
-          if (sortingObject !== undefined) {
-            const { id, desc } = sortingObject;
-
-            const column = await this.db.column.findUnique({
-              where: {
-                id,
-              },
-            });
-
-            const isText = column?.type === "TEXT";
-            const columns = await this.getColumns(tableId, userId);
-
-            const rowWhere = this.generateWhereClause(
-              view.columnFilters as ViewColumnFilter[],
-              columns,
-            );
-
-            // Getting the rows we can render
-            const rowIds = await this.db.cell.findMany({
-              take: limit,
-              skip: cursor,
-              where: {
-                columnId: id,
-                row: {
-                  cells: {
-                    some: {
-                      AND: rowWhere,
-                    },
-                  },
-                },
-              },
-              select: {
-                rowId: true,
-              },
-              orderBy: isText
-                ? { textValue: desc ? "desc" : "asc" }
-                : { intValue: desc ? "desc" : "asc" },
-            });
-
-            // Extracting their IDs
-            const extractedId = rowIds.map((x) => x.rowId);
-            const idMap = new Map(extractedId.map((x, index) => [x, index]));
-
-            // Only getting the elements
-            const rawItems = await this.db.row.findMany({
-              where: {
-                id: {
-                  in: extractedId,
-                },
-              },
-              include: {
-                cells: true,
-              },
-            });
-
-            const items = rawItems.sort(
-              (x, y) => (idMap.get(x.id) ?? -1) - (idMap.get(y.id) ?? -1),
-            );
-
-            const nextCursor = cursor + items.length;
-
-            return { items, nextCursor };
-          }
-        } else if (view?.columnFilters) {
-          const columns = await this.getColumns(tableId, userId);
-
-          const rowWhere = this.generateWhereClause(
-            view.columnFilters as ViewColumnFilter[],
-            columns,
-          );
-
-          const items = await this.db.row.findMany({
-            take: limit,
-            skip: cursor,
-            where: {
-              cells: {
-                some: {
-                  AND: rowWhere,
-                },
+      // Getting the rows we can render
+      const rowIds = await this.db.cell.findMany({
+        take: limit,
+        skip: cursor,
+        where: {
+          columnId: id,
+          row: {
+            cells: {
+              some: {
+                AND: rowWhere,
               },
             },
-            include: {
-              cells: true,
-            },
-            orderBy: {
-              index: "asc",
-            },
-          });
+          },
+        },
+        select: {
+          rowId: true,
+        },
+        orderBy: isText
+          ? { textValue: desc ? "desc" : "asc" }
+          : { intValue: desc ? "desc" : "asc" },
+      });
 
-          const nextCursor = cursor + items.length;
+      // Extracting their IDs
+      const extractedId = rowIds.map((x) => x.rowId);
+      const idMap = new Map(extractedId.map((x, index) => [x, index]));
 
-          return { items, nextCursor };
-        }
-      }
+      // Only getting the elements
+      const rawItems = await this.db.row.findMany({
+        where: {
+          id: {
+            in: extractedId,
+          },
+        },
+        include: {
+          cells: true,
+        },
+      });
+
+      const items = rawItems.sort(
+        (x, y) => (idMap.get(x.id) ?? -1) - (idMap.get(y.id) ?? -1),
+      );
+
+      const nextCursor = cursor + items.length;
+
+      return { items, nextCursor };
     }
 
-    // No custom views.
     const items = await this.db.row.findMany({
       take: limit,
       skip: cursor,
       where: {
         tableId,
+        cells: {
+          some: {
+            AND: rowWhere,
+          },
+        },
       },
       include: {
         cells: true,

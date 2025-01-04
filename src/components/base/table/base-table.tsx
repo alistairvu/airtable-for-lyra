@@ -5,7 +5,6 @@ import type { Column, View } from "@prisma/client";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   type ColumnDef,
-  type ColumnFiltersState,
   type RowData,
   type SortingState,
   flexRender,
@@ -19,13 +18,17 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { getQueryKey } from "@trpc/react-query";
 import { PlusIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { z } from "zod";
 import type { RowWithCells } from "~/@types";
 import { useAddTextColumn } from "~/hooks/use-add-column";
 import { useAddDummyRows } from "~/hooks/use-add-dummy-rows";
 import { useAddRow } from "~/hooks/use-add-row";
+import { useColumnFilters } from "~/hooks/use-column-filters";
 import { useEditIntCell, useEditTextCell } from "~/hooks/use-edit-cell";
+import { useSorting } from "~/hooks/use-sorting";
 import { TableSidebarContext } from "~/hooks/use-table-sidebar";
 import { cn } from "~/lib/utils";
+import { columnFiltersSchema } from "~/schemas/sorting.schema";
 import { api } from "~/trpc/react";
 import {
   Table,
@@ -44,7 +47,7 @@ type BaseTableProps = {
   viewId: string;
   initialColumns: Column[];
   initialSorting: SortingState;
-  initialColumnFilters: ColumnFiltersState;
+  initialColumnFilters: z.infer<typeof columnFiltersSchema>;
   initialRowCount: number;
   initialViews: View[];
 };
@@ -79,11 +82,11 @@ export const BaseTable = ({
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // SECTION: Sorting state
-  const [sorting, setSorting] = useState<SortingState>(initialSorting);
+  const [sorting, setSorting] = useSorting(initialSorting);
 
   // SECTION: Filter state
   const [columnFilters, setColumnFilters] =
-    useState<ColumnFiltersState>(initialColumnFilters);
+    useColumnFilters(initialColumnFilters);
 
   // SECTION: State related to search
   const [isSearching, setIsSearching] = useState(false);
@@ -112,7 +115,7 @@ export const BaseTable = ({
     fetchNextPage,
     isFetching,
   } = api.table.getInfiniteRows.useInfiniteQuery(
-    { tableId, limit: FETCH_LIMIT, viewId },
+    { tableId, limit: FETCH_LIMIT, sorting, columnFilters },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
@@ -170,7 +173,7 @@ export const BaseTable = ({
       queryClient.removeQueries({
         queryKey: getQueryKey(
           api.table.getInfiniteRows,
-          { tableId, limit: FETCH_LIMIT, viewId },
+          { tableId, limit: FETCH_LIMIT, sorting, columnFilters },
           "infinite",
         ),
       });
@@ -180,7 +183,8 @@ export const BaseTable = ({
       await utils.table.getInfiniteRows.invalidate({
         tableId,
         limit: FETCH_LIMIT,
-        viewId,
+        sorting,
+        columnFilters,
       });
     },
   });
@@ -191,7 +195,7 @@ export const BaseTable = ({
       queryClient.removeQueries({
         queryKey: getQueryKey(
           api.table.getInfiniteRows,
-          { tableId, limit: FETCH_LIMIT, viewId },
+          { tableId, limit: FETCH_LIMIT, sorting, columnFilters },
           "infinite",
         ),
       });
@@ -201,7 +205,8 @@ export const BaseTable = ({
       await utils.table.getInfiniteRows.invalidate({
         tableId,
         limit: FETCH_LIMIT,
-        viewId,
+        sorting,
+        columnFilters,
       });
     },
   });
@@ -227,12 +232,16 @@ export const BaseTable = ({
     getSortedRowModel: getSortedRowModel(),
 
     onColumnFiltersChange: (updater) => {
-      const newFilters = functionalUpdate(updater, columnFilters);
-      setColumnFilters(updater);
-      setViewColumnFilters.mutate({
-        viewId,
-        columnFilters: newFilters,
-      });
+      const rawFilters = functionalUpdate(updater, columnFilters);
+      const newFilters = columnFiltersSchema.safeParse(rawFilters);
+
+      if (newFilters.success) {
+        setColumnFilters(newFilters.data);
+        setViewColumnFilters.mutate({
+          viewId,
+          columnFilters: newFilters.data,
+        });
+      }
     },
 
     getFilteredRowModel: getFilteredRowModel(),
@@ -247,7 +256,7 @@ export const BaseTable = ({
     },
 
     getRowId: (originalRow, _index, _parent) => {
-      return `row:${String(originalRow.index)}`;
+      return originalRow.id;
     },
 
     // Provide our updateData function to our table meta
@@ -361,12 +370,9 @@ export const BaseTable = ({
           setIsSearching={setIsSearching}
           query={query}
           handleEditQuery={handleEditQuery}
-          columnFilters={columnFilters}
-          setColumnFilters={setColumnFilters}
           columns={columns}
-          sorting={sorting}
-          setSorting={setSorting}
           viewId={viewId}
+          tableId={tableId}
         />
 
         <div className="flex">
