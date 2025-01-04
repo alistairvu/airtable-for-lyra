@@ -73,6 +73,7 @@ export const BaseSidebar = ({
         createdAt: new Date(),
         updatedAt: new Date(),
         lastSeen: null,
+        query: null,
       };
 
       // Optimistically update the columns

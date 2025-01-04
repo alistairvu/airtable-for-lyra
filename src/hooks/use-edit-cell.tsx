@@ -1,4 +1,7 @@
 import { api } from "~/trpc/react";
+import { useColumnFilters } from "./use-column-filters";
+import { useSearchQuery } from "./use-search-query";
+import { useSorting } from "./use-sorting";
 
 /**
  * Provides text cell editing functionality
@@ -6,12 +9,11 @@ import { api } from "~/trpc/react";
  * @param tableId The id of the current table.
  * @returns
  */
-export const useEditTextCell = (
-  tableId: string,
-  viewId: string,
-  limit = 1000,
-) => {
+export const useEditTextCell = (tableId: string, limit = 1000) => {
   const utils = api.useUtils();
+  const [sorting] = useSorting();
+  const [columnFilters] = useColumnFilters();
+  const [query] = useSearchQuery();
 
   const editTextCell = api.table.editTextCell.useMutation({
     onMutate: async ({ value, cellId }) => {
@@ -22,12 +24,14 @@ export const useEditTextCell = (
       const previousRows = utils.table.getInfiniteRows.getInfiniteData({
         tableId,
         limit,
-        viewId,
+        sorting,
+        columnFilters,
+        query,
       });
 
       // Optimistically update
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit, viewId },
+        { tableId, limit, sorting, columnFilters, query },
         (data) => {
           console.log(data);
 
@@ -70,7 +74,7 @@ export const useEditTextCell = (
 
     onError: (_err, _newRow, context) => {
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit, viewId },
+        { tableId, limit, sorting, columnFilters, query },
         context?.previousRows ?? {
           pages: [],
           pageParams: [],
@@ -79,7 +83,13 @@ export const useEditTextCell = (
     },
 
     onSettled: async () => {
-      await utils.table.getInfiniteRows.invalidate({ tableId, viewId, limit });
+      await utils.table.getInfiniteRows.invalidate({
+        tableId,
+        sorting,
+        columnFilters,
+        query,
+        limit,
+      });
     },
   });
 
@@ -92,12 +102,11 @@ export const useEditTextCell = (
  * @param tableId
  * @returns
  */
-export const useEditIntCell = (
-  tableId: string,
-  viewId: string,
-  limit = 1000,
-) => {
+export const useEditIntCell = (tableId: string, limit = 1000) => {
   const utils = api.useUtils();
+  const [sorting] = useSorting();
+  const [columnFilters] = useColumnFilters();
+  const [query] = useSearchQuery();
 
   const editIntCell = api.table.editIntCell.useMutation({
     onMutate: async ({ value, cellId }) => {
@@ -108,12 +117,14 @@ export const useEditIntCell = (
       const previousRows = utils.table.getInfiniteRows.getInfiniteData({
         tableId,
         limit,
-        viewId,
+        sorting,
+        columnFilters,
+        query,
       });
 
       // Optimistically update
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit, viewId },
+        { tableId, limit, sorting, columnFilters, query },
         (data) => {
           if (!data) {
             return {
@@ -151,7 +162,7 @@ export const useEditIntCell = (
 
     onError: (_err, _newRow, context) => {
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit, viewId },
+        { tableId, limit, sorting, columnFilters, query },
         context?.previousRows ?? {
           pages: [],
           pageParams: [],
@@ -160,7 +171,7 @@ export const useEditIntCell = (
     },
 
     onSettled: async () => {
-      await utils.table.getInfiniteRows.invalidate({ tableId, limit, viewId });
+      await utils.table.getInfiniteRows.invalidate({ tableId, limit });
     },
   });
 

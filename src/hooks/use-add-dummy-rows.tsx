@@ -1,12 +1,14 @@
 import { type Column } from "@prisma/client";
 import { api } from "~/trpc/react";
+import { useColumnFilters } from "./use-column-filters";
+import { useSearchQuery } from "./use-search-query";
+import { useSorting } from "./use-sorting";
 
 type UseAddDummyRowParams = {
   tableId: string;
   columns: Column[];
   rowCount: number;
   limit: number;
-  viewId: string;
 };
 
 export const useAddDummyRows = ({
@@ -14,9 +16,11 @@ export const useAddDummyRows = ({
   columns,
   rowCount,
   limit,
-  viewId,
 }: UseAddDummyRowParams) => {
   const utils = api.useUtils();
+  const [sorting] = useSorting();
+  const [query] = useSearchQuery();
+  const [columnFilters] = useColumnFilters();
 
   const addRow = api.table.addDummyRows.useMutation({
     onMutate: async ({ dummyRows }) => {
@@ -27,7 +31,9 @@ export const useAddDummyRows = ({
       const previousRows = utils.table.getInfiniteRows.getInfiniteData({
         tableId,
         limit,
-        viewId,
+        sorting,
+        query,
+        columnFilters,
       });
 
       const emptyNewRows = dummyRows
@@ -85,7 +91,7 @@ export const useAddDummyRows = ({
 
       // Optimistically update
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit, viewId },
+        { tableId, limit, sorting, query, columnFilters },
         (data) => {
           if (!data) {
             return {
@@ -113,7 +119,7 @@ export const useAddDummyRows = ({
 
     onError: (_err, _newRow, context) => {
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit, viewId },
+        { tableId, limit, sorting, query, columnFilters },
         context?.previousRows ?? {
           pages: [],
           pageParams: [],
@@ -122,7 +128,13 @@ export const useAddDummyRows = ({
     },
 
     onSettled: async () => {
-      await utils.table.getInfiniteRows.invalidate({ tableId, limit, viewId });
+      await utils.table.getInfiniteRows.invalidate({
+        tableId,
+        limit,
+        sorting,
+        query,
+        columnFilters,
+      });
       await utils.table.countRows.invalidate(tableId);
     },
   });

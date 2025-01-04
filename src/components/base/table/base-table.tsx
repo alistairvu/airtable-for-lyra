@@ -137,10 +137,10 @@ export const BaseTable = ({
   const totalFetched = rows.length;
 
   // SECTION: Mutations for editing a text cell
-  const editTextCell = useEditTextCell(tableId, viewId, FETCH_LIMIT);
+  const editTextCell = useEditTextCell(tableId, FETCH_LIMIT);
 
   // SECTION: Mutations for editing a text cell
-  const editIntCell = useEditIntCell(tableId, viewId, FETCH_LIMIT);
+  const editIntCell = useEditIntCell(tableId, FETCH_LIMIT);
 
   // SECTION: Mutations for adding a new row
   const addRow = useAddRow({
@@ -148,7 +148,6 @@ export const BaseTable = ({
     columns,
     rowCount,
     limit: FETCH_LIMIT,
-    viewId,
   });
 
   // SECTION: Mutations for adding a dummy row
@@ -157,7 +156,6 @@ export const BaseTable = ({
     columns,
     rowCount,
     limit: FETCH_LIMIT,
-    viewId,
   });
 
   const generateDummyRows = (count = 5000) => {
@@ -174,7 +172,7 @@ export const BaseTable = ({
   };
 
   // SECTION: Mutations for adding a new text column
-  const addTextColumn = useAddTextColumn(tableId, viewId, FETCH_LIMIT);
+  const addTextColumn = useAddTextColumn(tableId, FETCH_LIMIT);
 
   // SECTION: Mutation for editing the cell state
   const setViewSorting = api.view.setSortState.useMutation({
