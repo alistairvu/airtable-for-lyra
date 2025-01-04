@@ -1,5 +1,8 @@
 import { ColumnType } from "@prisma/client";
 import { api } from "~/trpc/react";
+import { useColumnFilters } from "./use-column-filters";
+import { useSearchQuery } from "./use-search-query";
+import { useSorting } from "./use-sorting";
 
 /**
  * Hook encapsulating the logic for adding a text column.
@@ -7,12 +10,11 @@ import { api } from "~/trpc/react";
  * @param tableId
  * @returns
  */
-export const useAddTextColumn = (
-  tableId: string,
-  viewId: string,
-  limit = 1000,
-) => {
+export const useAddTextColumn = (tableId: string, limit = 1000) => {
   const utils = api.useUtils();
+  const [query] = useSearchQuery();
+  const [sorting] = useSorting();
+  const [columnFilters] = useColumnFilters();
 
   // SECTION: Mutations for adding a new  text column
   const addTextColumn = api.table.addTextColumn.useMutation({
@@ -26,7 +28,9 @@ export const useAddTextColumn = (
       const previousRows = utils.table.getInfiniteRows.getInfiniteData({
         tableId,
         limit,
-        viewId,
+        query,
+        sorting,
+        columnFilters,
       });
 
       const nextIndex =
@@ -46,7 +50,7 @@ export const useAddTextColumn = (
 
       // Optimistically update the cells
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit, viewId },
+        { tableId, limit, query, sorting, columnFilters },
         (data) => {
           if (!data) {
             return {
@@ -100,7 +104,7 @@ export const useAddTextColumn = (
     onError: (_err, _newRow, context) => {
       utils.table.getColumns.setData(tableId, context?.previousColumns ?? []);
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit, viewId },
+        { tableId, limit, query, sorting, columnFilters },
         context?.previousRows ?? {
           pages: [],
           pageParams: [],
@@ -110,7 +114,13 @@ export const useAddTextColumn = (
 
     onSettled: async () => {
       await Promise.allSettled([
-        utils.table.getInfiniteRows.invalidate({ tableId, limit, viewId }),
+        utils.table.getInfiniteRows.invalidate({
+          tableId,
+          limit,
+          query,
+          sorting,
+          columnFilters,
+        }),
         utils.table.getColumns.invalidate(tableId),
       ]);
     },

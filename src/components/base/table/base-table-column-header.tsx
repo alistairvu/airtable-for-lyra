@@ -1,6 +1,4 @@
-import { type Column } from "@tanstack/react-table";
-import { type RowWithCells } from "~/@types";
-import { Button } from "../ui/button";
+import type { Column } from "@tanstack/react-table";
 import {
   ArrowDown01,
   ArrowDown10,
@@ -10,30 +8,42 @@ import {
   PencilIcon,
   X,
 } from "lucide-react";
-import { NumberColumnIcon } from "../icons/number-column-icon";
-import { TextColumnIcon } from "../icons/text-column-icon";
+import { useState } from "react";
+import type { RowWithCells } from "~/@types";
+import { cn } from "~/lib/utils";
+import { NumberColumnIcon } from "../../icons/number-column-icon";
+import { TextColumnIcon } from "../../icons/text-column-icon";
+import { Button } from "../../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { cn } from "~/lib/utils";
+} from "../../ui/dropdown-menu";
+import { BaseColumnEdit } from "../actions/base-column-edit";
 
-type BaseTableHeaderProps = {
+type BaseTableColumnHeaderProps = {
   column: Column<RowWithCells, string | number>;
   name: string;
   isNumber?: boolean;
 };
 
-export const BaseTableHeader = ({
+export const BaseTableColumnHeader = ({
   column,
   name,
   isNumber,
-}: BaseTableHeaderProps) => {
+}: BaseTableColumnHeaderProps) => {
+  const [editOpen, setEditOpen] = useState(false);
+
   return (
     <DropdownMenu>
+      <BaseColumnEdit
+        open={editOpen}
+        setOpen={setEditOpen}
+        columnId={column.id}
+      />
+
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -61,7 +71,10 @@ export const BaseTableHeader = ({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent>
-        <DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => setEditOpen(true)}
+        >
           <PencilIcon />
           Edit
         </DropdownMenuItem>

@@ -1,12 +1,14 @@
 import { type Column } from "@prisma/client";
 import { api } from "~/trpc/react";
+import { useColumnFilters } from "./use-column-filters";
+import { useSearchQuery } from "./use-search-query";
+import { useSorting } from "./use-sorting";
 
 type UseAddRowParams = {
   tableId: string;
   columns: Column[];
   rowCount: number;
   limit: number;
-  viewId: string;
 };
 
 export const useAddRow = ({
@@ -14,9 +16,11 @@ export const useAddRow = ({
   columns,
   rowCount,
   limit,
-  viewId,
 }: UseAddRowParams) => {
   const utils = api.useUtils();
+  const [columnFilters] = useColumnFilters();
+  const [query] = useSearchQuery();
+  const [sorting] = useSorting();
 
   const addRow = api.table.addRow.useMutation({
     onMutate: async () => {
@@ -27,7 +31,9 @@ export const useAddRow = ({
       const previousRows = utils.table.getInfiniteRows.getInfiniteData({
         tableId,
         limit,
-        viewId,
+        columnFilters,
+        query,
+        sorting,
       });
 
       const emptyNewRow = {
@@ -59,7 +65,7 @@ export const useAddRow = ({
 
       // Optimistically update
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit, viewId },
+        { tableId, limit, columnFilters, query, sorting },
         (data) => {
           if (!data) {
             return {
@@ -89,7 +95,7 @@ export const useAddRow = ({
 
     onError: (_err, _newRow, context) => {
       utils.table.getInfiniteRows.setInfiniteData(
-        { tableId, limit, viewId },
+        { tableId, limit, columnFilters, query, sorting },
         context?.previousRows ?? {
           pages: [],
           pageParams: [],
@@ -99,7 +105,13 @@ export const useAddRow = ({
 
     onSettled: async () => {
       await utils.table.countRows.invalidate(tableId);
-      await utils.table.getInfiniteRows.invalidate({ tableId, limit, viewId });
+      await utils.table.getInfiniteRows.invalidate({
+        tableId,
+        limit,
+        columnFilters,
+        query,
+        sorting,
+      });
     },
   });
 

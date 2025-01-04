@@ -1,25 +1,20 @@
 import { type Column } from "@prisma/client";
+import { ArrowUpDown } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import {
   Popover,
-  PopoverTrigger,
   PopoverContent,
+  PopoverTrigger,
 } from "~/components/ui/popover";
-import { type SortingState } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
-import { type Dispatch, type SetStateAction } from "react";
-import { Button } from "~/components/ui/button";
+import { useSorting } from "~/hooks/use-sorting";
 
 type BaseTableSortProps = {
-  sorting: SortingState;
-  setSorting: Dispatch<SetStateAction<SortingState>>;
   columns: Column[];
 };
 
-export const BaseTableSort = ({
-  sorting,
-  setSorting,
-  columns,
-}: BaseTableSortProps) => {
+export const BaseTableSort = (_props: BaseTableSortProps) => {
+  const [sorting] = useSorting();
+
   return (
     <Popover>
       <PopoverTrigger asChild>

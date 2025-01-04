@@ -1,23 +1,37 @@
 "use client";
 
+import { faker } from "@faker-js/faker";
+import type { Column, View } from "@prisma/client";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   type ColumnDef,
-  flexRender,
-  getCoreRowModel,
   type RowData,
-  useReactTable,
   type SortingState,
-  getSortedRowModel,
-  type ColumnFiltersState,
-  getFilteredRowModel,
+  flexRender,
   functionalUpdate,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  useReactTable,
 } from "@tanstack/react-table";
-import { type View, type Column } from "@prisma/client";
-import {
-  type ColumnWithDisabled,
-  type IntFilter,
-  type RowWithCells,
-} from "~/@types";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { getQueryKey } from "@trpc/react-query";
+import { useDebounce } from "@uidotdev/usehooks";
+import { PlusIcon } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type z } from "zod";
+import type { RowWithCells } from "~/@types";
+import { useAddTextColumn } from "~/hooks/use-add-column";
+import { useAddDummyRows } from "~/hooks/use-add-dummy-rows";
+import { useAddRow } from "~/hooks/use-add-row";
+import { useColumnFilters } from "~/hooks/use-column-filters";
+import { useEditIntCell, useEditTextCell } from "~/hooks/use-edit-cell";
+import { useSearchQuery } from "~/hooks/use-search-query";
+import { useSorting } from "~/hooks/use-sorting";
+import { TableSidebarContext } from "~/hooks/use-table-sidebar";
+import { cn } from "~/lib/utils";
+import { columnFiltersSchema } from "~/schemas/sorting.schema";
+import { api } from "~/trpc/react";
 import {
   Table,
   TableBody,
@@ -25,37 +39,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
-import { BaseTableCell } from "./base-table-cell";
-import { api } from "~/trpc/react";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { BaseTableHeader } from "./base-table-header";
-import { cn } from "~/lib/utils";
-import { PlusIcon } from "lucide-react";
-import { BaseTableActions } from "./base-table-actions";
-import { useEditIntCell, useEditTextCell } from "~/hooks/use-edit-cell";
-import { useAddTextColumn } from "~/hooks/use-add-column";
-import { useAddRow } from "~/hooks/use-add-row";
-import { BaseSidebar } from "./layout/base-sidebar";
-import { TableSidebarContext } from "~/hooks/use-table-sidebar";
-import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
-import { useAddDummyRows } from "~/hooks/use-add-dummy-rows";
-import { faker } from "@faker-js/faker";
+} from "../../ui/table";
+import { BaseTableActions } from "../headers/base-table-actions";
+import { BaseSidebar } from "../layout/base-sidebar";
+import { getColumns } from "./base-table-columns";
 
 type BaseTableProps = {
   tableId: string;
   viewId: string;
   initialColumns: Column[];
   initialSorting: SortingState;
-  initialColumnFilters: ColumnFiltersState;
+  initialColumnFilters: z.infer<typeof columnFiltersSchema>;
   initialRowCount: number;
   initialViews: View[];
 };
@@ -90,15 +84,16 @@ export const BaseTable = ({
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // SECTION: Sorting state
-  const [sorting, setSorting] = useState<SortingState>(initialSorting);
+  const [sorting, setSorting] = useSorting(initialSorting);
 
   // SECTION: Filter state
   const [columnFilters, setColumnFilters] =
-    useState<ColumnFiltersState>(initialColumnFilters);
+    useColumnFilters(initialColumnFilters);
 
   // SECTION: State related to search
   const [isSearching, setIsSearching] = useState(false);
-  const [query, setQuery] = useState("");
+  const [query] = useSearchQuery();
+  const debouncedQuery = useDebounce(query, 300);
 
   // Loading in data
   const rowCountQuery = api.table.countRows.useQuery(tableId, {
@@ -113,102 +108,23 @@ export const BaseTable = ({
   });
 
   const columnDef: ColumnDef<RowWithCells, string | number>[] = useMemo(
-    () =>
-      (columns as ColumnWithDisabled[]).map((col) => ({
-        id: col.id,
-        name: col.name,
-        filterFn:
-          col.type === "NUMBER"
-            ? (row, columnId, filterValue) => {
-                const cell = row
-                  .getAllCells()
-                  .find((cell) => cell.column.id === columnId);
-
-                if (cell && typeof cell.getValue() === "number") {
-                  const { mode, value } = filterValue as IntFilter;
-
-                  if (value === null) {
-                    return true;
-                  }
-
-                  if (mode == "gt") {
-                    return value < (cell.getValue() as number);
-                  }
-
-                  if (mode == "lt") {
-                    return value > (cell.getValue() as number);
-                  }
-
-                  return true;
-                }
-
-                return false;
-              }
-            : (row, columnId, filterValue) => {
-                const cell = row
-                  .getAllCells()
-                  .find((cell) => cell.column.id === columnId);
-
-                if (cell) {
-                  return filterValue
-                    ? cell.getValue() === ""
-                    : cell.getValue() !== "";
-                }
-
-                return false;
-              },
-
-        accessorFn: (row: RowWithCells) => {
-          const cell = row.cells.find((cell) => cell.columnId === col.id);
-
-          if (col.type === "NUMBER") {
-            return cell?.intValue ?? 0;
-          }
-
-          return cell?.textValue ?? "";
-        },
-
-        header: ({ column }) => (
-          <BaseTableHeader
-            column={column}
-            name={col.name}
-            isNumber={col.type === "NUMBER"}
-          />
-        ),
-
-        footer: (props) => props.column.id,
-
-        cell: (props) => {
-          const isSorted = props.column.getIsSorted();
-          const columnIndex = props.column.getIndex();
-          const initialValue = props.getValue();
-
-          return (
-            <BaseTableCell
-              table={props.table}
-              rowId={props.row.original.id}
-              initialValue={initialValue}
-              isSorted={isSorted}
-              columnIndex={columnIndex}
-              query={query}
-              isSearching={isSearching}
-              isNumber={col.type === "NUMBER"}
-              disabled={col.disabled}
-            />
-          );
-        },
-      })),
-    [columns, query, isSearching],
+    () => getColumns({ columns, isSearching }),
+    [columns, isSearching],
   );
 
   // Row data
-
   const {
     data: infiniteRowsData,
     fetchNextPage,
     isFetching,
   } = api.table.getInfiniteRows.useInfiniteQuery(
-    { tableId, limit: FETCH_LIMIT, viewId },
+    {
+      tableId,
+      limit: FETCH_LIMIT,
+      sorting,
+      columnFilters,
+      query: debouncedQuery,
+    },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
@@ -221,10 +137,10 @@ export const BaseTable = ({
   const totalFetched = rows.length;
 
   // SECTION: Mutations for editing a text cell
-  const editTextCell = useEditTextCell(tableId, viewId, FETCH_LIMIT);
+  const editTextCell = useEditTextCell(tableId, FETCH_LIMIT);
 
   // SECTION: Mutations for editing a text cell
-  const editIntCell = useEditIntCell(tableId, viewId, FETCH_LIMIT);
+  const editIntCell = useEditIntCell(tableId, FETCH_LIMIT);
 
   // SECTION: Mutations for adding a new row
   const addRow = useAddRow({
@@ -232,7 +148,6 @@ export const BaseTable = ({
     columns,
     rowCount,
     limit: FETCH_LIMIT,
-    viewId,
   });
 
   // SECTION: Mutations for adding a dummy row
@@ -241,7 +156,6 @@ export const BaseTable = ({
     columns,
     rowCount,
     limit: FETCH_LIMIT,
-    viewId,
   });
 
   const generateDummyRows = (count = 5000) => {
@@ -258,7 +172,7 @@ export const BaseTable = ({
   };
 
   // SECTION: Mutations for adding a new text column
-  const addTextColumn = useAddTextColumn(tableId, viewId, FETCH_LIMIT);
+  const addTextColumn = useAddTextColumn(tableId, FETCH_LIMIT);
 
   // SECTION: Mutation for editing the cell state
   const setViewSorting = api.view.setSortState.useMutation({
@@ -266,7 +180,7 @@ export const BaseTable = ({
       queryClient.removeQueries({
         queryKey: getQueryKey(
           api.table.getInfiniteRows,
-          { tableId, limit: FETCH_LIMIT, viewId },
+          { tableId, limit: FETCH_LIMIT, sorting, columnFilters },
           "infinite",
         ),
       });
@@ -276,13 +190,33 @@ export const BaseTable = ({
       await utils.table.getInfiniteRows.invalidate({
         tableId,
         limit: FETCH_LIMIT,
-        viewId,
+        sorting,
+        columnFilters,
       });
     },
   });
 
   // SECTION: Mutation for saving the sorting view
-  const setViewColumnFilters = api.view.setColumnFilters.useMutation();
+  const setViewColumnFilters = api.view.setColumnFilters.useMutation({
+    onMutate: () => {
+      queryClient.removeQueries({
+        queryKey: getQueryKey(
+          api.table.getInfiniteRows,
+          { tableId, limit: FETCH_LIMIT, sorting, columnFilters },
+          "infinite",
+        ),
+      });
+    },
+
+    onSettled: async () => {
+      await utils.table.getInfiniteRows.invalidate({
+        tableId,
+        limit: FETCH_LIMIT,
+        sorting,
+        columnFilters,
+      });
+    },
+  });
 
   // Column definitions
 
@@ -296,7 +230,7 @@ export const BaseTable = ({
 
     onSortingChange: (updater) => {
       const newSorting = functionalUpdate(updater, sorting);
-      setSorting(updater);
+      void setSorting(updater);
       setViewSorting.mutate({
         viewId,
         sorting: newSorting,
@@ -305,18 +239,23 @@ export const BaseTable = ({
     getSortedRowModel: getSortedRowModel(),
 
     onColumnFiltersChange: (updater) => {
-      const newFilters = functionalUpdate(updater, columnFilters);
-      setColumnFilters(updater);
-      setViewColumnFilters.mutate({
-        viewId,
-        columnFilters: newFilters,
-      });
+      const rawFilters = functionalUpdate(updater, columnFilters);
+      const newFilters = columnFiltersSchema.safeParse(rawFilters);
+
+      if (newFilters.success) {
+        void setColumnFilters(newFilters.data);
+        setViewColumnFilters.mutate({
+          viewId,
+          columnFilters: newFilters.data,
+        });
+      }
     },
 
     getFilteredRowModel: getFilteredRowModel(),
     globalFilterFn: "includesString",
 
     manualSorting: true,
+    manualFiltering: true,
 
     state: {
       sorting,
@@ -324,7 +263,7 @@ export const BaseTable = ({
     },
 
     getRowId: (originalRow, _index, _parent) => {
-      return "row:" + String(originalRow.index);
+      return originalRow.id;
     },
 
     // Provide our updateData function to our table meta
@@ -366,7 +305,7 @@ export const BaseTable = ({
 
         if (isNumber) {
           editIntCell.mutate({
-            value: parseInt(`${value}`),
+            value: Number.parseInt(`${value}`),
             cellId,
           });
         } else {
@@ -397,6 +336,12 @@ export const BaseTable = ({
     overscan: 10,
   });
 
+  useEffect(() => {
+    if (table.getRowModel().rows.length) {
+      rowVirtualizer.scrollToIndex?.(0);
+    }
+  }, [debouncedQuery, table, rowVirtualizer]);
+
   // Setting up infinite scrolling
   const fetchMoreOnBottomReached = useCallback(
     async (containerRefElement?: HTMLDivElement | null) => {
@@ -419,15 +364,6 @@ export const BaseTable = ({
     void fetchMoreOnBottomReached(tableContainerRef.current);
   }, [fetchMoreOnBottomReached]);
 
-  // SECTION: Handle global filter
-  const handleEditQuery = (query: string) => {
-    setQuery(query);
-    table.setGlobalFilter(query);
-    if (!!table.getRowModel().rows.length) {
-      rowVirtualizer.scrollToIndex?.(0);
-    }
-  };
-
   return (
     <TableSidebarContext.Provider
       value={{ open: sidebarOpen, setIsOpen: setSidebarOpen }}
@@ -436,14 +372,9 @@ export const BaseTable = ({
         <BaseTableActions
           isSearching={isSearching}
           setIsSearching={setIsSearching}
-          query={query}
-          handleEditQuery={handleEditQuery}
-          columnFilters={columnFilters}
-          setColumnFilters={setColumnFilters}
           columns={columns}
-          sorting={sorting}
-          setSorting={setSorting}
           viewId={viewId}
+          tableId={tableId}
         />
 
         <div className="flex">
@@ -532,6 +463,7 @@ export const BaseTable = ({
                 }}
               >
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  // biome-ignore lint/style/noNonNullAssertion: <explanation>
                   const row = tableRows[virtualRow.index]!;
 
                   return (
@@ -650,7 +582,9 @@ export const BaseTable = ({
             </Table>
 
             <div
-              className={`sticky bottom-0 left-0 z-20 flex h-[24px] w-full items-center justify-start border-t bg-slate-100 pl-2 text-[11px]`}
+              className={
+                "sticky bottom-0 left-0 z-20 flex h-[24px] w-full items-center justify-start border-t bg-slate-100 pl-2 text-[11px]"
+              }
             >
               <span>
                 {rowCount} {rowCount !== 1 ? "rows" : "row"}

@@ -1,4 +1,4 @@
-import { type PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 
 /**
@@ -22,7 +22,7 @@ export class BaseController {
 
     // Based on the count, get the new base name
     const name =
-      baseCount > 0 ? `Untitled Base ${baseCount + 1}` : `Untitled Base`;
+      baseCount > 0 ? `Untitled Base ${baseCount + 1}` : "Untitled Base";
 
     // And creating a new base with that name
     const base = await this.db.base.create({

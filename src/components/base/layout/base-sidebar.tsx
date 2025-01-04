@@ -1,5 +1,6 @@
 "use client";
 
+import type { View } from "@prisma/client";
 import {
   Calendar,
   ChartNoAxesGantt,
@@ -12,18 +13,17 @@ import {
   PlusIcon,
   Search,
 } from "lucide-react";
-import { useTableSidebar } from "~/hooks/use-table-sidebar";
-import { GridFeatureIcon } from "../../icons/grid-feature-icon";
-import { useState } from "react";
-import { Button } from "../../ui/button";
-import { cn } from "~/lib/utils";
-import { GanttIcon } from "../../icons/gantt-icon";
-import { Separator } from "../../ui/separator";
-import { FormIcon } from "../../icons/form-icon";
-import { type View } from "@prisma/client";
-import { api } from "~/trpc/react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useTableSidebar } from "~/hooks/use-table-sidebar";
+import { cn } from "~/lib/utils";
+import { api } from "~/trpc/react";
+import { FormIcon } from "../../icons/form-icon";
+import { GanttIcon } from "../../icons/gantt-icon";
+import { GridFeatureIcon } from "../../icons/grid-feature-icon";
+import { Button } from "../../ui/button";
+import { Separator } from "../../ui/separator";
 
 type BaseSidebarProps = {
   initialViews: View[];
@@ -73,6 +73,7 @@ export const BaseSidebar = ({
         createdAt: new Date(),
         updatedAt: new Date(),
         lastSeen: null,
+        query: null,
       };
 
       // Optimistically update the columns
@@ -92,7 +93,7 @@ export const BaseSidebar = ({
     },
 
     onSettled: async (data, _variables, _context) => {
-      router.replace(`/base/${params.baseId}/${tableId}/${data!.id}`);
+      router.replace(`/base/${params.baseId}/${tableId}/${data?.id}`);
       await utils.view.getViews.invalidate({ tableId });
     },
   });
@@ -158,6 +159,7 @@ export const BaseSidebar = ({
         <div
           className="my-2 flex cursor-pointer items-center justify-between py-2 pl-3 pr-[10px]"
           onClick={() => setCreateOpen((prev) => !prev)}
+          onKeyDown={() => setCreateOpen((prev) => !prev)}
         >
           <p className="truncate text-[15px]">Create...</p>
 

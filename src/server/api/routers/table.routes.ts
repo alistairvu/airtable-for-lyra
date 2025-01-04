@@ -1,5 +1,9 @@
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { z } from "zod";
+import {
+  columnFiltersSchema,
+  sortingStateSchema,
+} from "~/schemas/sorting.schema";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TableController } from "../controllers/table.controller";
 
 export const tableRouter = createTRPCRouter({
@@ -84,7 +88,10 @@ export const tableRouter = createTRPCRouter({
         tableId: z.string(),
         cursor: z.number().nullish(),
         limit: z.number().nullish(),
-        viewId: z.string().optional(),
+
+        sorting: sortingStateSchema,
+        columnFilters: columnFiltersSchema,
+        query: z.string().nullish(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -92,14 +99,17 @@ export const tableRouter = createTRPCRouter({
 
       const limit = input.limit ?? 1000;
       const cursor = input.cursor ?? 0;
+      const { tableId, sorting, columnFilters, query } = input;
 
-      return controller.getInfiniteRows(
-        input.tableId,
+      return controller.getInfiniteRows({
+        tableId,
         cursor,
         limit,
-        ctx.session.user.id,
-        input.viewId,
-      );
+        userId: ctx.session.user.id,
+        sorting,
+        columnFilters,
+        query,
+      });
     }),
 
   getColumns: protectedProcedure

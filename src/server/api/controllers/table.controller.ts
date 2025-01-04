@@ -1,11 +1,38 @@
-import { type Table, type PrismaClient, type Column } from "@prisma/client";
-import { type SortingState } from "@tanstack/react-table";
+import type { Column, PrismaClient, Table } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
-import { type IntFilter, type ViewColumnFilter } from "~/@types";
+import { type z } from "zod";
+import type { IntFilter, ViewColumnFilter } from "~/@types";
+import {
+  type columnFiltersSchema,
+  type sortingStateSchema,
+} from "~/schemas/sorting.schema";
 
 type AddDummyParams = {
   name: string;
   age: number;
+};
+
+type WhereFilterType =
+  | {
+      columnId?: string;
+      textValue: { contains: string; mode: "insensitive" };
+    }
+  | {
+      columnId: string;
+      textValue: { equals: string } | { not: string };
+    }
+  | {
+      columnId: string;
+      intValue: {
+        gt?: number;
+        lt?: number;
+      };
+    };
+
+type CellFilterType = {
+  cells: {
+    some: WhereFilterType;
+  };
 };
 
 /**
@@ -90,16 +117,20 @@ export class TableController {
     });
   }
 
-  generateWhereClause(filters: ViewColumnFilter[] | null, columns: Column[]) {
+  generateWhereClause(
+    filters: ViewColumnFilter[] | null,
+    columns: Column[],
+    query?: string | null,
+  ) {
     if (filters === null) {
-      return undefined;
+      return [];
     }
 
     if (filters.length === 0) {
-      return undefined;
+      return [];
     }
 
-    const whereFilters = filters
+    const whereFilters: CellFilterType[] = filters
       .map((f) => {
         const column = columns.find((c) => c.id === f.id);
 
@@ -109,16 +140,18 @@ export class TableController {
 
         if (column.type === "TEXT") {
           return {
-            columnId: f.id,
-            textValue: f.value
-              ? {
-                  equals: "",
-                }
-              : {
-                  NOT: {
-                    equals: "",
-                  },
-                },
+            cells: {
+              some: {
+                columnId: f.id,
+                textValue: f.value
+                  ? {
+                      equals: "",
+                    }
+                  : {
+                      not: "",
+                    },
+              },
+            },
           };
         }
 
@@ -127,18 +160,26 @@ export class TableController {
 
           if (intFilter.mode === "gt") {
             return {
-              columnId: f.id,
-              intValue: {
-                gt: intFilter.value,
+              cells: {
+                some: {
+                  columnId: f.id,
+                  intValue: {
+                    gt: intFilter.value ?? undefined,
+                  },
+                },
               },
             };
           }
 
           if (intFilter.mode === "lt") {
             return {
-              columnId: f.id,
-              intValue: {
-                gt: intFilter.value,
+              cells: {
+                some: {
+                  columnId: f.id,
+                  intValue: {
+                    lt: intFilter.value ?? undefined,
+                  },
+                },
               },
             };
           }
@@ -148,23 +189,26 @@ export class TableController {
       })
       .filter((x) => x !== undefined);
 
-    const where = {
-      row: {
+    if (query && query.length > 0) {
+      whereFilters.push({
         cells: {
           some: {
-            AND: whereFilters,
+            textValue: {
+              contains: query,
+              mode: "insensitive",
+            },
           },
         },
-      },
-    };
+      });
+    }
 
-    return where;
+    return whereFilters;
   }
 
   /**
    * Retrieves rows from a table with pagination and optional sorting based on a view.
    *
-   * @param tableId - The ID of the table to fetch rows from
+   * @param tableId - The ID of the table to fetch rows  from
    * @param cursor - The pagination cursor indicating where to start fetching rows
    * @param limit - The maximum number of rows to return
    * @param userId - The ID of the user requesting the rows
@@ -178,99 +222,128 @@ export class TableController {
    * according to the view's preferences. Otherwise, rows are sorted by their index
    * in ascending order.
    */
-  async getInfiniteRows(
-    tableId: string,
-    cursor: number,
-    limit: number,
-    userId: string,
-    viewId?: string,
-  ) {
+  async getInfiniteRows(params: {
+    tableId: string;
+    cursor: number;
+    limit: number;
+    userId: string;
+    sorting: z.infer<typeof sortingStateSchema>;
+    columnFilters: z.infer<typeof columnFiltersSchema>;
+    query?: string | null;
+  }) {
+    const { tableId, cursor, limit, userId, sorting, columnFilters, query } =
+      params;
+
     await this.findBase(tableId, userId);
 
-    // Handling different viewId
-    if (viewId) {
-      const view = await this.db.view.findUnique({
+    const columns = await this.getColumns(tableId, userId);
+
+    const rowWhere = this.generateWhereClause(columnFilters, columns, query);
+
+    // One column at a time
+    const sortingObject = sorting[0];
+
+    if (sortingObject !== undefined) {
+      const { id, desc } = sortingObject;
+
+      const column = await this.db.column.findUnique({
         where: {
-          id: viewId,
+          id,
         },
       });
 
-      // First thing
-      if (view !== undefined) {
-        // Has sorting state
-        if (view?.sorting) {
-          const parsedSorting = view.sorting as unknown as SortingState;
+      const isText = column?.type === "TEXT";
 
-          // One column at a time
-          const sortingObject = parsedSorting[0];
+      // Getting the rows we can render
+      let rowWhitelist = null;
 
-          if (sortingObject !== undefined) {
-            const { id, desc } = sortingObject;
-
-            const column = await this.db.column.findUnique({
-              where: {
-                id,
-              },
-            });
-
-            const isText = column?.type === "TEXT";
-            const columns = await this.getColumns(tableId, userId);
-
-            const rowWhere = this.generateWhereClause(
-              view.columnFilters as ViewColumnFilter[],
-              columns,
-            );
-
-            // Getting the rows we can render
-            const rowIds = await this.db.cell.findMany({
-              take: limit,
-              skip: cursor,
-              where: {
-                columnId: id,
-                // row: rowWhere ? rowWhere.row : undefined,
-              },
-              select: {
-                rowId: true,
-              },
-              orderBy: isText
-                ? { textValue: desc ? "desc" : "asc" }
-                : { intValue: desc ? "desc" : "asc" },
-            });
-
-            // Extracting their IDs
-            const extractedId = rowIds.map((x) => x.rowId);
-            const idMap = new Map(extractedId.map((x, index) => [x, index]));
-
-            // Only getting the elements
-            const rawItems = await this.db.row.findMany({
-              where: {
-                id: {
-                  in: extractedId,
+      if (query && query.length > 0) {
+        rowWhitelist = await this.db.row.findMany({
+          where: {
+            cells: {
+              some: {
+                textValue: {
+                  contains: query,
+                  mode: "insensitive",
                 },
               },
-              include: {
-                cells: true,
-              },
-            });
-
-            const items = rawItems.sort(
-              (x, y) => (idMap.get(x.id) ?? -1) - (idMap.get(y.id) ?? -1),
-            );
-
-            const nextCursor = cursor + items.length;
-
-            return { items, nextCursor };
-          }
-        }
+            },
+          },
+          select: {
+            id: true,
+          },
+        });
       }
+
+      const rowWhitelistCondition =
+        rowWhitelist === null
+          ? []
+          : [
+              {
+                rowId: {
+                  in: rowWhitelist.map((x) => x.id),
+                },
+              },
+            ];
+
+      const rowIds = await this.db.cell.findMany({
+        take: limit,
+        skip: cursor,
+        where: {
+          AND: [
+            {
+              columnId: id,
+            },
+            ...rowWhere
+              .filter((x) => x.cells.some.columnId === id)
+              .map((x) => x.cells.some),
+
+            ...rowWhitelistCondition,
+          ],
+        },
+        select: {
+          rowId: true,
+        },
+        orderBy: isText
+          ? { textValue: desc ? "desc" : "asc" }
+          : { intValue: desc ? "desc" : "asc" },
+      });
+
+      // Extracting their IDs
+      const extractedId = rowIds.map((x) => x.rowId);
+      const idMap = new Map(extractedId.map((x, index) => [x, index]));
+
+      // Only getting the elements
+      const rawItems = await this.db.row.findMany({
+        where: {
+          id: {
+            in: extractedId,
+          },
+        },
+        include: {
+          cells: true,
+        },
+      });
+
+      const items = rawItems.sort(
+        (x, y) => (idMap.get(x.id) ?? -1) - (idMap.get(y.id) ?? -1),
+      );
+
+      const nextCursor = cursor + items.length;
+
+      return { items, nextCursor };
     }
 
-    // No custom views.
     const items = await this.db.row.findMany({
       take: limit,
       skip: cursor,
       where: {
-        tableId,
+        AND: [
+          {
+            tableId,
+          },
+          ...rowWhere,
+        ],
       },
       include: {
         cells: true,
@@ -410,8 +483,6 @@ export class TableController {
       textValue: "",
     }));
 
-    console.log({ cellData });
-
     await this.db.cell.createMany({
       data: cellData,
     });
@@ -475,8 +546,6 @@ export class TableController {
       },
     });
 
-    console.log({ newRow });
-
     return newRow;
   }
 
@@ -531,6 +600,7 @@ export class TableController {
 
     const cellData = rows.flatMap((row, index) => {
       return columns.map((column) => {
+        // biome-ignore lint/style/noNonNullAssertion: <explanation>
         const { name, age } = dummyRows[index]!;
 
         if (column.name === "Name") {

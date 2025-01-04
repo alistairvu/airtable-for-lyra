@@ -1,14 +1,15 @@
-import { memo, useCallback, useEffect, useState } from "react";
-import { TableInput } from "../ui/table-input";
-import {
-  type SortDirection,
-  type Table as TanstackTable,
+import type {
+  SortDirection,
+  Table as TanstackTable,
 } from "@tanstack/react-table";
-import { type RowWithCells } from "~/@types";
+import { useDebounce } from "@uidotdev/usehooks";
+import { memo, useCallback, useEffect, useState } from "react";
+import type { RowWithCells } from "~/@types";
+import { useSearchQuery } from "~/hooks/use-search-query";
 import { cn } from "~/lib/utils";
+import { TableInput } from "../../ui/table-input";
 
 type BaseTableCellProps = {
-  query: string;
   isSearching?: boolean;
   isNumber?: boolean;
   table: TanstackTable<RowWithCells>;
@@ -25,12 +26,13 @@ export const BaseTableCell = memo(function BaseTableCell({
   rowId,
   columnIndex,
   table,
-  query,
   isNumber,
   isSorted,
   disabled,
 }: BaseTableCellProps) {
   const [value, setValue] = useState(initialValue ?? "");
+  const [query] = useSearchQuery();
+  const debouncedQuery = useDebounce(query, 300);
 
   useEffect(() => {
     if (initialValue) {
@@ -40,7 +42,7 @@ export const BaseTableCell = memo(function BaseTableCell({
 
   const handleBlur = useCallback(() => {
     if (typeof value === "number") {
-      if (!isNaN(value) && value !== initialValue) {
+      if (!Number.isNaN(value) && value !== initialValue) {
         table.options.meta?.updateData?.(rowId, columnIndex, value);
       }
     } else {
@@ -51,11 +53,11 @@ export const BaseTableCell = memo(function BaseTableCell({
   }, [value, initialValue, columnIndex, rowId, table.options.meta]);
 
   const matchesQuery = () => {
-    if (query === "") {
+    if (debouncedQuery === "") {
       return false;
     }
 
-    const searchRegex = new RegExp(`${query}`, "ig");
+    const searchRegex = new RegExp(`${debouncedQuery}`, "ig");
 
     return searchRegex.test(String(value));
   };
@@ -66,7 +68,9 @@ export const BaseTableCell = memo(function BaseTableCell({
         "my-0 truncate rounded-none border-none px-2 shadow-none",
         (isSorted || matchesQuery()) && "bg-[#f4e9e4]",
       )}
-      value={typeof value === "string" ? value : isNaN(value) ? "" : value}
+      value={
+        typeof value === "string" ? value : Number.isNaN(value) ? "" : value
+      }
       onChange={(e) =>
         isNumber ? setValue(e.target.valueAsNumber) : setValue(e.target.value)
       }
