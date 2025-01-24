@@ -17,10 +17,10 @@ datasource db {
 // Necessary for Next auth
 model Account {
     id                       String  @id @default(cuid())
-    userId                   String
+    userId                   String  @map("user_id")
     type                     String
     provider                 String
-    providerAccountId        String
+    providerAccountId        String  @map("provider_account_id")
     refresh_token            String? // @db.Text
     access_token             String? // @db.Text
     expires_at               Int?
@@ -37,8 +37,8 @@ model Account {
 
 model Session {
     id           String   @id @default(cuid())
-    sessionToken String   @unique
-    userId       String
+    sessionToken String   @unique @map("session_token")
+    userId       String   @map("user_id")
     expires      DateTime
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -49,7 +49,7 @@ model User {
     id            String    @id @default(cuid())
     name          String?
     email         String?   @unique
-    emailVerified DateTime?
+    emailVerified DateTime? @map("email_verified")
     image         String?
     accounts      Account[]
     sessions      Session[]
@@ -69,29 +69,29 @@ model VerificationToken {
 
 model Base {
     id        String   @id @default(uuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     name   String
     tables Table[]
 
     user   User   @relation(fields: [userId], references: [id])
-    userId String
+    userId String @map("user_id")
 
     @@map("bases")
 }
 
 model Table {
     id        String   @id @default(uuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     index Int
 
     name    String
     rows    Row[]
     base    Base?    @relation(fields: [baseId], references: [id])
-    baseId  String?
+    baseId  String?  @map("base_id")
     columns Column[]
 
     views View[]
@@ -106,8 +106,8 @@ enum ColumnType {
 
 model Column {
     id        String   @id @default(uuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     index Int
 
@@ -115,7 +115,7 @@ model Column {
     type ColumnType
 
     table   Table  @relation(fields: [tableId], references: [id])
-    tableId String
+    tableId String @map("table_id")
     cells   Cell[]
 
     @@map("columns")
@@ -123,11 +123,11 @@ model Column {
 
 model Row {
     id        String   @id @default(uuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     table   Table?  @relation(fields: [tableId], references: [id])
-    tableId String?
+    tableId String? @map("table_id")
 
     index Int
     cells Cell[]
@@ -139,14 +139,14 @@ model Cell {
     id       String @id @default(uuid())
     row      Row    @relation(fields: [rowId], references: [id])
     column   Column @relation(fields: [columnId], references: [id])
-    rowId    String
-    columnId String
+    rowId    String @map("row_id")
+    columnId String @map("column_id")
 
-    intValue  Int?
-    textValue String?
+    intValue  Int?    @map("int_value")
+    textValue String? @map("text_value")
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     @@map("cells")
 }
@@ -155,17 +155,17 @@ model View {
     id   String @id @default(uuid())
     name String
 
-    tableId String
+    tableId String @map("table_id")
     table   Table  @relation(fields: [tableId], references: [id])
 
     sorting       Json
-    columnFilters Json
+    columnFilters Json    @map("column_filters")
     query         String?
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 
-    lastSeen DateTime?
+    lastSeen DateTime? @map("last_seen")
 
     @@map("views")
 }
